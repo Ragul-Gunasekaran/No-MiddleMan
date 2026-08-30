@@ -22,7 +22,9 @@ import {
   Bell,
   ChevronRight,
   Trash2,
-  Edit
+  Edit,
+  Home,
+  Search
 } from 'lucide-react';
 
 export default function App() {
@@ -46,6 +48,8 @@ export default function App() {
   const [myOffers, setMyOffers] = useState([]);
   const [marketPrices, setMarketPrices] = useState({});
   const [isEditingCrop, setIsEditingCrop] = useState(false);
+  const [isCreatingCrop, setIsCreatingCrop] = useState(false);
+  const [isCreatingRequirement, setIsCreatingRequirement] = useState(false);
   const [editCropForm, setEditCropForm] = useState(null);
   
   // Form States
@@ -451,6 +455,78 @@ export default function App() {
     );
   };
 
+  const RenderSmartMatchDetails = ({ match, onAction }) => {
+    const [showDetail, setShowDetail] = useState(false);
+    const totalScore = match.score_details.total_score;
+    const isCropMatch = match.score_details.crop_score > 0;
+    const isLocationMatch = match.score_details.location_score >= 15;
+    const isQuantityMatch = match.score_details.quantity_score >= 15;
+    const isPriceMatch = match.score_details.price_score >= 10;
+
+    return (
+      <div className="border border-slate-150 rounded-xl p-4 bg-white hover:shadow-md transition space-y-3 shadow-xs">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <span className="bg-emerald-50 text-emerald-700 text-xs px-2.5 py-0.5 rounded-full font-black border border-emerald-200">
+              ⭐ {totalScore}% Match
+            </span>
+            <span className="text-xs font-bold text-slate-800 flex items-center gap-1">
+              {match.buyer_name || match.farmer_name}
+              {match.buyer_verified && (
+                <span className="text-emerald-600 font-bold text-[9px] bg-emerald-50 px-1 rounded border">✓ Verified Buyer</span>
+              )}
+              {match.farmer_verified && (
+                <span className="text-emerald-600 font-bold text-[9px] bg-emerald-50 px-1 rounded border">✓ Verified Farmer</span>
+              )}
+            </span>
+          </div>
+          <button 
+            type="button"
+            onClick={() => setShowDetail(!showDetail)}
+            className="text-[11px] text-emerald-655 font-bold hover:underline"
+          >
+            {showDetail ? 'Hide explanation / மறை' : 'Why this match? / விளக்கம்'}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-500 border-t pt-2.5">
+          <div className="flex items-center gap-1">
+            {isCropMatch ? <span className="text-emerald-600 font-bold">✓</span> : <span className="text-rose-500 font-bold">✗</span>}
+            <span>Same Crop / ஒரே பயிர்</span>
+          </div>
+          <div className="flex items-center gap-1">
+            {isLocationMatch ? <span className="text-emerald-600 font-bold">✓</span> : <span className="text-amber-500 font-bold">⚠</span>}
+            <span>Good Location / அருகில்</span>
+          </div>
+          <div className="flex items-center gap-1">
+            {isQuantityMatch ? <span className="text-emerald-600 font-bold">✓</span> : <span className="text-amber-500 font-bold">⚠</span>}
+            <span>Quantity Suitable / அளவு</span>
+          </div>
+          <div className="flex items-center gap-1">
+            {isPriceMatch ? <span className="text-emerald-600 font-bold">✓</span> : <span className="text-amber-500 font-bold">⚠</span>}
+            <span>Price Suitable / விலை</span>
+          </div>
+        </div>
+
+        {showDetail && (
+          <div className="mt-3 p-3 bg-slate-50 border rounded-xl text-[11px] text-slate-500 font-mono space-y-1">
+            <div className="font-bold text-slate-700 mb-1 border-b pb-1">Points Breakdown:</div>
+            <div className="flex justify-between"><span>Crop Similarity:</span> <span className="font-bold">{match.score_details.crop_score}/40</span></div>
+            <div className="flex justify-between"><span>Location Proximity:</span> <span className="font-bold">{match.score_details.location_score}/25 ({match.score_details.distance_km} km)</span></div>
+            <div className="flex justify-between"><span>Quantity Match:</span> <span className="font-bold">{match.score_details.quantity_score}/20</span></div>
+            <div className="flex justify-between"><span>Price Target Fit:</span> <span className="font-bold">{match.score_details.price_score}/15</span></div>
+          </div>
+        )}
+
+        {onAction && (
+          <div className="border-t pt-3 flex justify-end">
+            {onAction}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans text-slate-800 w-full">
       
@@ -508,18 +584,38 @@ export default function App() {
                 className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold transition ${activeTab === 'farmer' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
               >
                 <span className="flex items-center gap-2">
-                  <BarChart2 className="w-4 h-4" />
-                  <span>Dashboard / முகப்பு</span>
+                  <Home className="w-4 h-4" />
+                  <span>🏠 Dashboard / முகப்பு</span>
                 </span>
                 <ChevronRight className="w-3 opacity-60" />
               </button>
               <button 
-                onClick={() => setActiveTab('upload')} 
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold transition ${activeTab === 'upload' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
+                onClick={() => setActiveTab('my-crops')} 
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold transition ${activeTab === 'my-crops' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
               >
                 <span className="flex items-center gap-2">
-                  <Plus className="w-4 h-4" />
-                  <span>Upload Crop / பதிவேற்று</span>
+                  <Sprout className="w-4 h-4" />
+                  <span>🌾 My Crops / என் பயிர்கள்</span>
+                </span>
+                <ChevronRight className="w-3 opacity-60" />
+              </button>
+              <button 
+                onClick={() => setActiveTab('find-buyers')} 
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold transition ${activeTab === 'find-buyers' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
+              >
+                <span className="flex items-center gap-2">
+                  <Search className="w-4 h-4" />
+                  <span>🔎 Find Buyers / வாங்குபவர்கள்</span>
+                </span>
+                <ChevronRight className="w-3 opacity-60" />
+              </button>
+              <button 
+                onClick={() => setActiveTab('offers')} 
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold transition ${activeTab === 'offers' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
+              >
+                <span className="flex items-center gap-2">
+                  <IndianRupee className="w-4 h-4" />
+                  <span>💰 Offers / சலுகைகள்</span>
                 </span>
                 <ChevronRight className="w-3 opacity-60" />
               </button>
@@ -531,18 +627,38 @@ export default function App() {
                 className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold transition ${activeTab === 'buyer' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
               >
                 <span className="flex items-center gap-2">
-                  <ShoppingBag className="w-4 h-4" />
-                  <span>My Demands / என் தேவைகள்</span>
+                  <Home className="w-4 h-4" />
+                  <span>🏠 Dashboard / முகப்பு</span>
                 </span>
                 <ChevronRight className="w-3 opacity-60" />
               </button>
               <button 
-                onClick={() => setActiveTab('marketplace')} 
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold transition ${activeTab === 'marketplace' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
+                onClick={() => setActiveTab('my-requirements')} 
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold transition ${activeTab === 'my-requirements' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
               >
                 <span className="flex items-center gap-2">
-                  <ListFilter className="w-4 h-4" />
-                  <span>Marketplace / சந்தை</span>
+                  <ShoppingBag className="w-4 h-4" />
+                  <span>📋 My Requirements / தேவைகள்</span>
+                </span>
+                <ChevronRight className="w-3 opacity-60" />
+              </button>
+              <button 
+                onClick={() => setActiveTab('find-crops')} 
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold transition ${activeTab === 'find-crops' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
+              >
+                <span className="flex items-center gap-2">
+                  <Search className="w-4 h-4" />
+                  <span>🌾 Find Crops / பயிர்கள்</span>
+                </span>
+                <ChevronRight className="w-3 opacity-60" />
+              </button>
+              <button 
+                onClick={() => setActiveTab('my-offers')} 
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-bold transition ${activeTab === 'my-offers' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
+              >
+                <span className="flex items-center gap-2">
+                  <IndianRupee className="w-4 h-4" />
+                  <span>💰 My Offers / சலுகைகள்</span>
                 </span>
                 <ChevronRight className="w-3 opacity-60" />
               </button>
@@ -614,10 +730,14 @@ export default function App() {
         <header className="bg-white border-b h-16 sticky top-0 z-20 flex items-center justify-between px-6 shadow-sm">
           <div>
             <h2 className="text-xs lg:text-sm font-extrabold text-slate-800 uppercase tracking-wider">
-              {activeTab === 'farmer' && 'Farmer Dashboard / விவசாயி கட்டுப்பாட்டு அறை'}
-              {activeTab === 'upload' && 'Upload Crop Listings / அறுவடை விவரம் பதிவேற்றம்'}
-              {activeTab === 'buyer' && 'Buyer Demands / கொள்முதல் தேவைகள்'}
-              {activeTab === 'marketplace' && 'Available Crops Marketplace / விவசாய பயிர் சந்தை'}
+              {activeTab === 'farmer' && '🏠 Farmer Dashboard / முகப்பு'}
+              {activeTab === 'my-crops' && '🌾 My Crops / என் பயிர்கள்'}
+              {activeTab === 'find-buyers' && '🔎 Find Buyers / வாங்குபவர்கள்'}
+              {activeTab === 'offers' && '💰 Offers / பெறப்பட்ட சலுகைகள்'}
+              {activeTab === 'buyer' && '🏠 Buyer Dashboard / முகப்பு'}
+              {activeTab === 'my-requirements' && '📋 My Requirements / என் தேவைகள்'}
+              {activeTab === 'find-crops' && '🌾 Find Crops / பயிர்கள்'}
+              {activeTab === 'my-offers' && '💰 My Offers / என் சலுகைகள்'}
             </h2>
           </div>
 
@@ -664,35 +784,59 @@ export default function App() {
         </header>
 
         {/* Mobile/Tablet Tab Navigation (only visible when sidebar is hidden) */}
-        <div className="lg:hidden flex border-b bg-white divide-x divide-slate-100">
+        <div className="lg:hidden flex border-b bg-white overflow-x-auto select-none no-scrollbar">
           {currentUser?.role === 'FARMER' ? (
             <>
               <button 
                 onClick={() => setActiveTab('farmer')} 
-                className={`flex-1 py-3 text-center text-xs font-bold transition ${activeTab === 'farmer' ? 'border-b-2 border-emerald-600 text-emerald-700 bg-emerald-50/10' : 'text-slate-500 hover:bg-slate-50'}`}
+                className={`flex-1 min-w-[90px] py-2.5 text-center text-[10px] font-extrabold transition border-r ${activeTab === 'farmer' ? 'border-b-2 border-b-emerald-600 text-emerald-700 bg-emerald-50/10' : 'text-slate-500 hover:bg-slate-50'}`}
               >
-                Dashboard / முகப்பு
+                🏠 Home
               </button>
               <button 
-                onClick={() => setActiveTab('upload')} 
-                className={`flex-1 py-3 text-center text-xs font-bold transition ${activeTab === 'upload' ? 'border-b-2 border-emerald-600 text-emerald-700 bg-emerald-50/10' : 'text-slate-500 hover:bg-slate-50'}`}
+                onClick={() => setActiveTab('my-crops')} 
+                className={`flex-1 min-w-[90px] py-2.5 text-center text-[10px] font-extrabold transition border-r ${activeTab === 'my-crops' ? 'border-b-2 border-b-emerald-600 text-emerald-700 bg-emerald-50/10' : 'text-slate-500 hover:bg-slate-50'}`}
               >
-                Upload Crop / பதிவேற்று
+                🌾 Crops
+              </button>
+              <button 
+                onClick={() => setActiveTab('find-buyers')} 
+                className={`flex-1 min-w-[90px] py-2.5 text-center text-[10px] font-extrabold transition border-r ${activeTab === 'find-buyers' ? 'border-b-2 border-b-emerald-600 text-emerald-700 bg-emerald-50/10' : 'text-slate-500 hover:bg-slate-50'}`}
+              >
+                🔎 Buyers
+              </button>
+              <button 
+                onClick={() => setActiveTab('offers')} 
+                className={`flex-1 min-w-[90px] py-2.5 text-center text-[10px] font-extrabold transition ${activeTab === 'offers' ? 'border-b-2 border-b-emerald-600 text-emerald-700 bg-emerald-50/10' : 'text-slate-500 hover:bg-slate-50'}`}
+              >
+                💰 Offers
               </button>
             </>
           ) : (
             <>
               <button 
                 onClick={() => setActiveTab('buyer')} 
-                className={`flex-1 py-3 text-center text-xs font-bold transition ${activeTab === 'buyer' ? 'border-b-2 border-emerald-600 text-emerald-700 bg-emerald-50/10' : 'text-slate-500 hover:bg-slate-50'}`}
+                className={`flex-1 min-w-[90px] py-2.5 text-center text-[10px] font-extrabold transition border-r ${activeTab === 'buyer' ? 'border-b-2 border-b-emerald-600 text-emerald-700 bg-emerald-50/10' : 'text-slate-500 hover:bg-slate-50'}`}
               >
-                My Demands / என் தேவைகள்
+                🏠 Home
               </button>
               <button 
-                onClick={() => setActiveTab('marketplace')} 
-                className={`flex-1 py-3 text-center text-xs font-bold transition ${activeTab === 'marketplace' ? 'border-b-2 border-emerald-600 text-emerald-700 bg-emerald-50/10' : 'text-slate-500 hover:bg-slate-50'}`}
+                onClick={() => setActiveTab('my-requirements')} 
+                className={`flex-1 min-w-[90px] py-2.5 text-center text-[10px] font-extrabold transition border-r ${activeTab === 'my-requirements' ? 'border-b-2 border-b-emerald-600 text-emerald-700 bg-emerald-50/10' : 'text-slate-500 hover:bg-slate-50'}`}
               >
-                Marketplace / சந்தை
+                📋 Demands
+              </button>
+              <button 
+                onClick={() => setActiveTab('find-crops')} 
+                className={`flex-1 min-w-[90px] py-2.5 text-center text-[10px] font-extrabold transition border-r ${activeTab === 'find-crops' ? 'border-b-2 border-b-emerald-600 text-emerald-700 bg-emerald-50/10' : 'text-slate-500 hover:bg-slate-50'}`}
+              >
+                🌾 Crops
+              </button>
+              <button 
+                onClick={() => setActiveTab('my-offers')} 
+                className={`flex-1 min-w-[90px] py-2.5 text-center text-[10px] font-extrabold transition ${activeTab === 'my-offers' ? 'border-b-2 border-b-emerald-600 text-emerald-700 bg-emerald-50/10' : 'text-slate-500 hover:bg-slate-50'}`}
+              >
+                💰 Bids
               </button>
             </>
           )}
@@ -701,19 +845,27 @@ export default function App() {
         {/* Dashboard Content Container */}
         <main className="flex-1 p-6 space-y-6">
 
-          {/* 1. FARMER TAB */}
+          {/* 1. FARMER DASHBOARD TAB */}
           {currentUser?.role === 'FARMER' && activeTab === 'farmer' && (
             <div className="space-y-6">
+              {/* Welcome Banner */}
+              <div className="bg-white border rounded-xl p-6 shadow-sm">
+                <h1 className="text-2xl font-black text-slate-800">Welcome back, {currentUser?.name} 👋 / வரவேற்கிறோம்</h1>
+                <p className="text-sm text-slate-500 mt-1">Here is a quick overview of your direct farm-to-buyer metrics today.</p>
+              </div>
+
               {/* Farmer Statistics Overview */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white border rounded-xl p-4 shadow-sm flex items-center justify-between">
+                <div className="bg-white border rounded-xl p-4.5 shadow-sm flex items-center justify-between">
                   <div className="space-y-1">
                     <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">My Harvest Listings / என் பயிர்கள்</div>
                     <div className="text-2xl font-black text-slate-800">{myCrops.length}</div>
-                    <div className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
-                      <TrendingUp className="w-3 h-3" />
-                      <span>Active crops listed</span>
-                    </div>
+                    <button 
+                      onClick={() => { setActiveTab('my-crops'); setIsCreatingCrop(false); }}
+                      className="text-xs text-emerald-600 font-bold hover:underline flex items-center gap-0.5 mt-1"
+                    >
+                      <span>Manage Crops →</span>
+                    </button>
                   </div>
                   <div className="w-16 h-8 text-emerald-500">
                     <svg className="w-full h-full" viewBox="0 0 100 40">
@@ -726,11 +878,16 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="bg-white border rounded-xl p-4 shadow-sm flex items-center justify-between">
+                <div className="bg-white border rounded-xl p-4.5 shadow-sm flex items-center justify-between">
                   <div className="space-y-1">
                     <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Active Buyer Demands / தேவைகள்</div>
                     <div className="text-2xl font-black text-slate-800">{allRequirements.length}</div>
-                    <div className="text-[10px] text-slate-500 font-medium">Market procurement feeds</div>
+                    <button 
+                      onClick={() => setActiveTab('find-buyers')}
+                      className="text-xs text-emerald-600 font-bold hover:underline flex items-center gap-0.5 mt-1"
+                    >
+                      <span>Find Buyers →</span>
+                    </button>
                   </div>
                   <div className="w-16 h-8 text-emerald-500">
                     <svg className="w-full h-full" viewBox="0 0 100 40">
@@ -739,11 +896,16 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="bg-white border rounded-xl p-4 shadow-sm flex items-center justify-between">
+                <div className="bg-white border rounded-xl p-4.5 shadow-sm flex items-center justify-between">
                   <div className="space-y-1">
                     <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Offers Received / சலுகைகள்</div>
                     <div className="text-2xl font-black text-slate-800">{cropOffers.length}</div>
-                    <div className="text-[10px] text-slate-500 font-medium">Bids in negotiation pipeline</div>
+                    <button 
+                      onClick={() => setActiveTab('offers')}
+                      className="text-xs text-emerald-600 font-bold hover:underline flex items-center gap-0.5 mt-1"
+                    >
+                      <span>Review Offers →</span>
+                    </button>
                   </div>
                   <div className="w-16 h-8 text-emerald-500">
                     <svg className="w-full h-full" viewBox="0 0 100 40">
@@ -756,293 +918,112 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Two Column Layout */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-                {/* Left Column (1/3): My Listings & Buyer Demands */}
-                <div className="lg:col-span-1 space-y-6">
-                  
-                  {/* My Crop Listings */}
-                  <div className="bg-white border rounded-xl shadow-sm p-4.5">
-                    <h3 className="text-lg font-bold text-slate-700 uppercase tracking-wider border-b pb-2 mb-3">
-                      My Crop Listings / என் பயிர்கள்
-                    </h3>
-                    {myCrops.length === 0 ? (
-                      <div className="bg-slate-50 border border-dashed rounded-xl p-6 text-center text-slate-400 text-xs">
-                        <p>No crops uploaded yet.</p>
-                        <button 
-                          onClick={() => setActiveTab('upload')} 
-                          className="mt-2 text-emerald-600 font-bold hover:underline"
-                        >
-                          + Post harvest crop
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-1">
-                        {myCrops.map(crop => (
-                          <div 
-                            key={crop.id}
-                            onClick={() => handleSelectCrop(crop)}
-                            className={`p-3 rounded-lg border text-left cursor-pointer transition flex justify-between items-center ${selectedCrop?.id === crop.id ? 'border-emerald-500 bg-emerald-50/30 shadow-xs ring-1 ring-emerald-500' : 'border-slate-200 bg-white hover:bg-slate-50'}`}
-                          >
-                            <div>
-                              <div className="font-bold text-slate-800 text-xs">🌾 {crop.crop_name}</div>
-                              <div className="text-[10px] text-slate-500 mt-0.5">{crop.quantity} {crop.unit} • {crop.location}</div>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-emerald-700 font-bold text-xs">₹{crop.expected_price}/{crop.unit}</div>
-                              <span className={`inline-block text-[8px] uppercase tracking-wider px-1.5 py-0.5 rounded font-black mt-1 ${crop.status === 'sold' ? 'bg-indigo-100 text-indigo-700' : 'bg-emerald-100 text-emerald-700'}`}>
-                                {crop.status}
-                              </span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+              {/* Dashboard Panels Summary */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                {/* Panel: My Harvest Crops Quick List */}
+                <div className="bg-white border rounded-xl p-5 shadow-sm space-y-4">
+                  <div className="flex justify-between items-center border-b pb-2">
+                    <h3 className="text-base font-bold text-slate-800">My Active Harvests / என் பயிர்கள்</h3>
+                    <button 
+                      onClick={() => { setActiveTab('my-crops'); setIsCreatingCrop(true); }}
+                      className="text-xs text-emerald-755 font-black hover:underline"
+                    >
+                      + Add Crop
+                    </button>
                   </div>
-
-                  {/* Procurement Feeds */}
-                  <div className="bg-white border rounded-xl shadow-sm p-4.5 space-y-3">
-                    <h3 className="text-lg font-bold text-slate-700 uppercase tracking-wider border-b pb-2 mb-3">
-                      Active Buyer Demands / கொள்முதல் தேவைகள்
-                    </h3>
-                    {allRequirements.length === 0 ? (
-                      <p className="text-xs text-slate-400 italic">No requirements published yet.</p>
-                    ) : (
-                      <div className="space-y-2.5 max-h-[250px] overflow-y-auto pr-1">
-                        {allRequirements.map(req => {
-                          const buyerUser = users.find(u => u.id === req.buyer_id);
-                          return (
-                            <div key={req.id} className="border border-slate-100 rounded-lg p-2.5 text-xs flex justify-between items-center hover:bg-slate-50 bg-white shadow-xs">
-                              <div>
-                                <div className="font-bold text-slate-700">🍉 {req.crop_name}</div>
-                                <div className="text-[10px] text-slate-500 mt-0.5">Quantity: {req.required_quantity} {req.unit} | {req.preferred_location}</div>
-                                <div className="text-[9px] text-slate-400 mt-1 flex items-center">
-                                  {req.buyer_id === 2 ? 'BigMart Wholesale' : (buyerUser?.name || `Buyer (ID: ${req.buyer_id})`)}
-                                  {(req.buyer_id === 2 || buyerUser?.is_verified) && (
-                                    <span className="text-emerald-600 font-black ml-1 text-[8px] bg-emerald-50 px-1 rounded">✓ Verified</span>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <span className="text-slate-400 text-[8px] uppercase block">Budget</span>
-                                <span className="text-emerald-700 font-bold text-xs">₹{req.max_price}/{req.unit}</span>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Right Column (2/3): Selected Listing Smart Matches & Comparative Table */}
-                <div className="lg:col-span-2 space-y-6">
-                  {selectedCrop ? (
-                    <div className="space-y-6">
-                      
-                      {/* Active Profile Summary */}
-                      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 p-5 rounded-xl shadow-xs flex justify-between items-start">
-                        <div>
-                          <span className="text-emerald-800 text-[9px] uppercase font-bold tracking-widest bg-emerald-100 px-2 py-0.5 rounded">
-                            Selected Active Profile / நடப்பு பயிர் விவரம்
-                          </span>
-                          <h4 className="text-lg font-black text-slate-800 mt-2">🌾 {selectedCrop.crop_name} ({selectedCrop.variety})</h4>
-                          <div className="flex items-center gap-4 text-xs text-slate-500 mt-1.5">
-                            <span className="flex items-center gap-1"><Scale className="w-3.5 h-3.5 text-slate-400" /> {selectedCrop.quantity} {selectedCrop.unit}</span>
-                            <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-slate-400" /> {selectedCrop.location}</span>
-                          </div>
-                        </div>
-                        <div className="text-right space-y-2">
-                          <div>
-                            <span className="text-slate-400 text-[9px] uppercase font-bold block">Expected Price</span>
-                            <span className="text-emerald-700 font-black text-lg">₹{selectedCrop.expected_price}/{selectedCrop.unit}</span>
-                          </div>
-                          <div className="flex gap-2 justify-end">
-                            <button
-                              onClick={() => {
-                                setEditCropForm({
-                                  crop_name: selectedCrop.crop_name,
-                                  variety: selectedCrop.variety || '',
-                                  quantity: selectedCrop.quantity.toString(),
-                                  unit: selectedCrop.unit,
-                                  expected_price: selectedCrop.expected_price.toString(),
-                                  location: selectedCrop.location,
-                                  description: selectedCrop.description || ''
-                                });
-                                setIsEditingCrop(true);
-                              }}
-                              className="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 px-3 py-1.5 rounded-lg text-xs font-bold transition border"
-                            >
-                              Edit / திருத்து
-                            </button>
-                            <button
-                              onClick={() => handleDeleteCrop(selectedCrop.id)}
-                              className="bg-rose-50 hover:bg-rose-100 text-rose-700 px-3 py-1.5 rounded-lg text-xs font-bold transition border border-rose-200"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Smart Match Table Layout */}
-                      <div className="bg-white border rounded-xl shadow-sm p-4.5 space-y-3">
-                        <div className="flex justify-between items-center border-b pb-2 mb-2">
-                          <h4 className="font-bold text-slate-700 text-lg uppercase flex items-center gap-1.5">
-                            <Sparkles className="w-4 h-4 text-emerald-500 fill-emerald-100" />
-                            <span>Smart Matches Discovery 🤖</span>
-                          </h4>
-                          <span className="text-slate-400 text-[10px] font-semibold">{cropMatches.length} matching demands found</span>
-                        </div>
-
-                        {cropMatches.length === 0 ? (
-                          <p className="text-sm text-slate-400 italic p-4 text-center">No buyer requirements matched this crop. Buyers need to list requirements.</p>
-                        ) : (
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse text-sm">
-                              <thead>
-                                <tr className="bg-slate-50 text-slate-500 border-b border-slate-200">
-                                  <th className="p-3 font-bold uppercase text-[9px]">Match %</th>
-                                  <th className="p-3 font-bold uppercase text-[9px]">Buyer</th>
-                                  <th className="p-3 font-bold uppercase text-[9px] text-center">Crop Match</th>
-                                  <th className="p-3 font-bold uppercase text-[9px] text-center">Location Proximity</th>
-                                  <th className="p-3 font-bold uppercase text-[9px] text-center">Quantity Fit</th>
-                                  <th className="p-3 font-bold uppercase text-[9px] text-center">Price Fit</th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-slate-100">
-                                {cropMatches.map(match => (
-                                  <tr key={match.requirement_id} className="hover:bg-slate-50/50 transition">
-                                    <td className="p-3">
-                                      <span className="bg-emerald-50 text-emerald-700 text-xs px-2.5 py-0.5 rounded-full font-black border border-emerald-200 shadow-xs">
-                                        {match.score_details.total_score}%
-                                      </span>
-                                    </td>
-                                    <td className="p-3">
-                                      <div className="font-bold text-slate-800 flex items-center gap-1">
-                                        {match.buyer_name}
-                                        {match.buyer_verified && (
-                                          <span className="bg-emerald-100 text-emerald-800 text-[8px] px-1 py-0.2 rounded font-bold" title="Verified Buyer">✓ Verified</span>
-                                        )}
-                                      </div>
-                                      <div className="text-[10px] text-slate-400 mt-0.5">{match.buyer_location}</div>
-                                    </td>
-                                    <td className="p-3 text-center">
-                                      {match.score_details.crop_score > 0 ? (
-                                        <span className="text-emerald-600 font-bold">✓ 40/40</span>
-                                      ) : (
-                                        <span className="text-rose-600 font-bold">✗ 0/40</span>
-                                      )}
-                                    </td>
-                                    <td className="p-3 text-center">
-                                      <div className="font-semibold text-slate-700">{match.score_details.distance_km} km</div>
-                                      <div className="text-[9px] text-slate-400">Score: {match.score_details.location_score}/25</div>
-                                    </td>
-                                    <td className="p-3 text-center">
-                                      <div className="font-semibold text-slate-700">{match.required_quantity} {match.unit}</div>
-                                      <div className="text-[9px] text-slate-400">Score: {match.score_details.quantity_score}/20</div>
-                                    </td>
-                                    <td className="p-3 text-center">
-                                      <div className="font-semibold text-slate-700">max ₹{match.max_price}</div>
-                                      <div className="text-[9px] text-slate-400">Score: {match.score_details.price_score}/15</div>
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Offers Comparison Desktop Table */}
-                      <div className="bg-white border rounded-xl shadow-sm p-4.5 space-y-3">
-                        <h4 className="font-bold text-slate-700 text-lg uppercase flex items-center gap-1.5 border-b pb-2 mb-2">
-                          <IndianRupee className="w-4 h-4 text-emerald-600" />
-                          <span>Offers received & comparison / பெறப்பட்ட சலுகைகள்</span>
-                        </h4>
-
-                        {cropOffers.length === 0 ? (
-                          <p className="text-sm text-slate-400 italic p-4 text-center">No offers received yet. Buyers must send offers from the marketplace.</p>
-                        ) : (
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse text-sm">
-                              <thead>
-                                <tr className="bg-slate-50 text-slate-500 border-b border-slate-200">
-                                  <th className="p-3 font-bold uppercase text-[9px]">Buyer</th>
-                                  <th className="p-3 font-bold uppercase text-[9px] text-center">Offered Price</th>
-                                  <th className="p-3 font-bold uppercase text-[9px] text-center">Expected Price</th>
-                                  <th className="p-3 font-bold uppercase text-[9px] text-center">Market Reference</th>
-                                  <th className="p-3 font-bold uppercase text-[9px] text-center">Quantity</th>
-                                  <th className="p-3 font-bold uppercase text-[9px] text-center">Status</th>
-                                  <th className="p-3 font-bold uppercase text-[9px] text-right">Action</th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-slate-100">
-                                {cropOffers.map(offer => {
-                                  const key = selectedCrop.crop_name.toLowerCase().trim();
-                                  const referenceObj = marketPrices[key];
-                                  const refPrice = referenceObj ? referenceObj.reference_price : 20.0;
-                                  const isBelow = offer.offered_price_per_unit < refPrice;
-
-                                  return (
-                                    <tr key={offer.id} className="hover:bg-slate-50/50 transition">
-                                      <td className="p-3 font-bold text-slate-800">
-                                        <div className="flex items-center gap-1">
-                                          {offer.buyer.name}
-                                          {offer.buyer.is_verified && (
-                                            <span className="bg-emerald-100 text-emerald-800 text-[8px] px-1 rounded font-bold">✓ Verified</span>
-                                          )}
-                                        </div>
-                                        {offer.message && (
-                                          <div className="text-[10px] text-slate-400 italic mt-0.5 truncate max-w-[150px]">"{offer.message}"</div>
-                                        )}
-                                      </td>
-                                      <td className="p-3 text-center">
-                                        <span className={`font-black text-xs ${isBelow ? 'text-amber-600' : 'text-emerald-700'}`}>
-                                          ₹{offer.offered_price_per_unit}/{selectedCrop.unit}
-                                        </span>
-                                        {isBelow && <span className="block text-[8px] text-amber-500 font-bold">Below Market</span>}
-                                      </td>
-                                      <td className="p-3 text-slate-500 text-center font-bold">
-                                        ₹{selectedCrop.expected_price}/{selectedCrop.unit}
-                                      </td>
-                                      <td className="p-3 text-slate-500 text-center font-semibold">
-                                        ₹{refPrice}/kg
-                                      </td>
-                                      <td className="p-3 text-slate-655 text-center font-semibold">
-                                        {offer.quantity} {selectedCrop.unit}
-                                      </td>
-                                      <td className="p-3 text-center">
-                                        <span className={`px-2 py-0.5 rounded text-[9px] uppercase font-bold ${
-                                          offer.status === 'accepted' ? 'bg-emerald-100 text-emerald-850' : 
-                                          offer.status === 'rejected' ? 'bg-rose-100 text-rose-800' :
-                                          offer.status === 'countered' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-850'
-                                        }`}>
-                                          {offer.status}
-                                        </span>
-                                      </td>
-                                      <td className="p-3 text-right">
-                                        <button
-                                          onClick={() => handleSelectOffer(offer)}
-                                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3.5 py-1.5 rounded-lg text-[11px] transition shadow-xs"
-                                        >
-                                          Negotiate / பேரம்
-                                        </button>
-                                      </td>
-                                    </tr>
-                                  );
-                                })}
-                              </tbody>
-                            </table>
-                          </div>
-                        )}
-                      </div>
+                  {myCrops.length === 0 ? (
+                    <div className="py-8 text-center text-slate-455 text-sm">
+                      <p>No crops posted yet.</p>
+                      <button 
+                        onClick={() => { setActiveTab('my-crops'); setIsCreatingCrop(true); }}
+                        className="mt-2 text-emerald-600 font-bold text-xs bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg transition"
+                      >
+                        + Add Crop / பயிர் விவரம் சேர்க்க
+                      </button>
                     </div>
                   ) : (
-                    <div className="bg-white border rounded-xl p-16 text-center text-slate-400 shadow-sm flex flex-col items-center justify-center min-h-[350px]">
-                      <Sprout className="w-12 h-12 text-emerald-600 text-opacity-25 mb-4" />
-                      <h4 className="font-extrabold text-slate-700 text-xs uppercase tracking-wider">No Crop Selected / பயிர் தேர்ந்தெடுக்கப்படவில்லை</h4>
-                      <p className="text-[11px] text-slate-400 mt-1 max-w-sm">Select one of your crop listings from the sidebar checklist to evaluate smart matching recommendations, compare offers, and log counter-offers.</p>
+                    <div className="divide-y divide-slate-100 max-h-[250px] overflow-y-auto pr-1">
+                      {myCrops.map(crop => (
+                        <div key={crop.id} className="py-3 flex justify-between items-center hover:bg-slate-50/50 transition px-1 rounded-lg">
+                          <div>
+                            <div className="font-bold text-slate-800 text-sm">🌾 {crop.crop_name}</div>
+                            <div className="text-xs text-slate-500 mt-0.5">{crop.quantity} {crop.unit} • {crop.location}</div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-emerald-700 font-black text-sm">₹{crop.expected_price}/{crop.unit}</span>
+                            <button 
+                              onClick={() => { handleSelectCrop(crop); setActiveTab('my-crops'); setIsCreatingCrop(false); }}
+                              className="bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 text-slate-700 text-xs px-2.5 py-1 rounded border font-semibold transition"
+                            >
+                              View Crop
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Panel: Best Matching Buyers */}
+                <div className="bg-white border rounded-xl p-5 shadow-sm space-y-4">
+                  <div className="flex justify-between items-center border-b pb-2">
+                    <h3 className="text-base font-bold text-slate-800">Buyers Looking for Your Crops / வாங்குபவர்கள்</h3>
+                    <button 
+                      onClick={() => setActiveTab('find-buyers')}
+                      className="text-xs text-emerald-755 font-black hover:underline"
+                    >
+                      View All Matches
+                    </button>
+                  </div>
+                  {myCrops.length === 0 ? (
+                    <p className="text-sm text-slate-400 italic py-4">Upload crops to discover matching buyer requirements.</p>
+                  ) : (
+                    <div className="space-y-3 max-h-[280px] overflow-y-auto pr-1">
+                      {(() => {
+                        let renderCount = 0;
+                        return allRequirements.map(req => {
+                          const matchingCrop = myCrops.find(c => c.crop_name.toLowerCase().trim() === req.crop_name.toLowerCase().trim());
+                          if (!matchingCrop) return null;
+                          
+                          // Calculate smart score details
+                          const crop_score = 40.0;
+                          const location_score = req.preferred_location.toLowerCase() === matchingCrop.location.toLowerCase() ? 25.0 : 10.0;
+                          const quantity_score = 20.0; // simple mock
+                          const price_score = matchingCrop.expected_price <= req.max_price ? 15.0 : 0.0;
+                          const total_score = crop_score + location_score + quantity_score + price_score;
+                          
+                          const matchObj = {
+                            id: req.id,
+                            score_details: { total_score, crop_score, location_score, quantity_score, price_score, distance_km: 0.0 },
+                            buyer_name: req.buyer_id === 2 ? 'BigMart Wholesale' : 'Local Buyer',
+                            buyer_verified: true,
+                            crop_name: req.crop_name,
+                            required_quantity: req.required_quantity,
+                            unit: req.unit,
+                            max_price: req.max_price
+                          };
+
+                          renderCount++;
+                          return (
+                            <RenderSmartMatchDetails 
+                              key={req.id} 
+                              match={matchObj} 
+                              onAction={
+                                <div className="flex justify-between items-center w-full">
+                                  <span className="text-[11px] text-slate-500">Matching Crop: <span className="font-bold">🌾 {matchingCrop.crop_name}</span></span>
+                                  <button 
+                                    onClick={() => { handleSelectCrop(matchingCrop); setSelectedRequirement(req); setActiveTab('find-buyers'); }}
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition"
+                                  >
+                                    View Match
+                                  </button>
+                                </div>
+                              }
+                            />
+                          );
+                        });
+                      })()}
                     </div>
                   )}
                 </div>
@@ -1050,126 +1031,27 @@ export default function App() {
             </div>
           )}
 
-          {/* 2. FARMER UPLOAD TAB */}
-          {currentUser?.role === 'FARMER' && activeTab === 'upload' && (
-            <div className="max-w-2xl mx-auto bg-white border rounded-xl shadow-sm p-6 space-y-4">
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b pb-2.5 flex items-center gap-1.5">
-                <Sprout className="w-5 h-5 text-emerald-600" />
-                <span>Upload New Harvest Details / புதிய அறுவடை விவரம் பதிவேற்று</span>
-              </h3>
-              
-              <form onSubmit={handleUploadCrop} className="space-y-4 text-slate-700 text-xs">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block font-bold text-slate-500 mb-1">Crop Name / பயிர் பெயர்</label>
-                    <select 
-                      className="w-full p-2.5 border rounded-lg bg-slate-50 font-semibold text-xs"
-                      value={cropForm.crop_name}
-                      onChange={(e) => setCropForm({...cropForm, crop_name: e.target.value})}
-                    >
-                      <option value="Tomato">🍅 Tomato / தக்காளி</option>
-                      <option value="Potato">🥔 Potato / உருளைக்கிழங்கு</option>
-                      <option value="Onion">🧅 Onion / வெங்காயம்</option>
-                      <option value="Rice">🌾 Rice / நெல்</option>
-                      <option value="Wheat">🌾 Wheat / கோதுமை</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block font-bold text-slate-500 mb-1">Variety / ரகம்</label>
-                    <input 
-                      type="text" 
-                      required
-                      placeholder="e.g. Local Hybrid, Premium"
-                      className="w-full p-2.5 border rounded-lg text-xs"
-                      value={cropForm.variety}
-                      onChange={(e) => setCropForm({...cropForm, variety: e.target.value})}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <label className="block font-bold text-slate-500 mb-1">Quantity / அளவு</label>
-                    <input 
-                      type="number" 
-                      required
-                      min="1"
-                      className="w-full p-2.5 border rounded-lg text-xs"
-                      value={cropForm.quantity}
-                      onChange={(e) => setCropForm({...cropForm, quantity: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-bold text-slate-500 mb-1">Unit / அலகு</label>
-                    <select 
-                      className="w-full p-2.5 border rounded-lg bg-slate-50 text-xs font-semibold"
-                      value={cropForm.unit}
-                      onChange={(e) => setCropForm({...cropForm, unit: e.target.value})}
-                    >
-                      <option value="tons">Tons / டன்கள்</option>
-                      <option value="kg">kg / கிலோகிராம்</option>
-                      <option value="bags">Bags / மூடைகள்</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block font-bold text-slate-500 mb-1">Expected Price (₹/unit) / விலை</label>
-                    <input 
-                      type="number" 
-                      required
-                      min="1"
-                      className="w-full p-2.5 border rounded-lg text-xs"
-                      value={cropForm.expected_price}
-                      onChange={(e) => setCropForm({...cropForm, expected_price: e.target.value})}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-500 mb-1">Harvest Location / அறுவடை இடம்</label>
-                  <input 
-                    type="text" 
-                    required
-                    placeholder="e.g. Nashik, Maharashtra"
-                    className="w-full p-2.5 border rounded-lg text-xs"
-                    value={cropForm.location}
-                    onChange={(e) => setCropForm({...cropForm, location: e.target.value})}
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-500 mb-1">Additional Details / கூடுதல் விவரங்கள்</label>
-                  <textarea 
-                    rows="3" 
-                    placeholder="Notes on harvesting date, logistics support details, packaging, etc." 
-                    className="w-full p-2.5 border rounded-lg text-xs"
-                    value={cropForm.description}
-                    onChange={(e) => setCropForm({...cropForm, description: e.target.value})}
-                  />
-                </div>
-
-                <button 
-                  type="submit" 
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm text-xs uppercase tracking-wider"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Upload Harvest Listing / அறுவடை விவரத்தைப் பதிவேற்று</span>
-                </button>
-              </form>
-            </div>
-          )}
-
-          {/* 3. BUYER TAB */}
+          {/* 3. BUYER DASHBOARD TAB */}
           {currentUser?.role === 'BUYER' && activeTab === 'buyer' && (
             <div className="space-y-6">
-              
+              {/* Welcome Banner */}
+              <div className="bg-white border rounded-xl p-6 shadow-sm">
+                <h1 className="text-2xl font-black text-slate-800">Welcome back, {currentUser?.name} 👋 / வரவேற்கிறோம்</h1>
+                <p className="text-sm text-slate-500 mt-1">Here is a quick overview of your direct buyer procurement pipeline today.</p>
+              </div>
+
               {/* Buyer Overview Statistics */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white border rounded-xl p-4 shadow-sm flex items-center justify-between">
+                <div className="bg-white border rounded-xl p-4.5 shadow-sm flex items-center justify-between">
                   <div className="space-y-1">
                     <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">My Active Demands / தேவைகள்</div>
                     <div className="text-2xl font-black text-slate-800">{myRequirements.length}</div>
-                    <div className="text-[10px] text-emerald-600 font-bold">Listed crop requirements</div>
+                    <button 
+                      onClick={() => { setActiveTab('my-requirements'); setIsCreatingRequirement(true); }}
+                      className="text-xs text-emerald-650 font-bold hover:underline flex items-center gap-0.5 mt-1"
+                    >
+                      <span>+ Define Demand / தேவைகள்</span>
+                    </button>
                   </div>
                   <div className="w-16 h-8 text-emerald-500">
                     <svg className="w-full h-full" viewBox="0 0 100 40">
@@ -1182,25 +1064,34 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="bg-white border rounded-xl p-4 shadow-sm flex items-center justify-between">
+                <div className="bg-white border rounded-xl p-4.5 shadow-sm flex items-center justify-between">
                   <div className="space-y-1">
-                    <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Matching Suppliers / விவசாயிகள்</div>
-                    <div className="text-2xl font-black text-slate-800">{requirementMatches.length}</div>
-                    <div className="text-[10px] text-slate-500 font-medium">Farmers found in match range</div>
+                    <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Crops for Sale / விவசாய பயிர்கள்</div>
+                    <div className="text-2xl font-black text-slate-800">{marketplaceCrops.length}</div>
+                    <button 
+                      onClick={() => setActiveTab('find-crops')}
+                      className="text-xs text-emerald-650 font-bold hover:underline flex items-center gap-0.5 mt-1"
+                    >
+                      <span>Find Crops →</span>
+                    </button>
                   </div>
                   <div className="w-16 h-8 text-emerald-500">
                     <svg className="w-full h-full" viewBox="0 0 100 40">
-                      <circle cx="20" cy="20" r="6" fill="none" stroke="currentColor" strokeWidth="3" />
-                      <line x1="26" y1="26" x2="38" y2="38" stroke="currentColor" strokeWidth="3" />
+                      <path d="M5,15 L25,30 L45,10 L65,25 L85,5" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
                     </svg>
                   </div>
                 </div>
 
-                <div className="bg-white border rounded-xl p-4 shadow-sm flex items-center justify-between">
+                <div className="bg-white border rounded-xl p-4.5 shadow-sm flex items-center justify-between">
                   <div className="space-y-1">
-                    <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Offers Sent / சலுகைகள்</div>
+                    <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Offers Placed / சலுகைகள்</div>
                     <div className="text-2xl font-black text-slate-800">{myOffers.length}</div>
-                    <div className="text-[10px] text-slate-500 font-medium">Bids in negotiation logs</div>
+                    <button 
+                      onClick={() => setActiveTab('my-offers')}
+                      className="text-xs text-emerald-650 font-bold hover:underline flex items-center gap-0.5 mt-1"
+                    >
+                      <span>My Bids →</span>
+                    </button>
                   </div>
                   <div className="w-16 h-8 text-emerald-500">
                     <svg className="w-full h-full" viewBox="0 0 100 40">
@@ -1210,25 +1101,154 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Grid split */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+              {/* Grid panels layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 
-                {/* Left Column (1/3): Form and Demands list */}
-                <div className="lg:col-span-1 space-y-6">
-                  
-                  {/* Post Form */}
+                {/* Panel: My active requirements */}
+                <div className="bg-white border rounded-xl p-5 shadow-sm space-y-4">
+                  <div className="flex justify-between items-center border-b pb-2">
+                    <h3 className="text-base font-bold text-slate-800">My Procurement Demands / என் தேவைகள்</h3>
+                    <button 
+                      onClick={() => { setActiveTab('my-requirements'); setIsCreatingRequirement(true); }}
+                      className="text-xs text-emerald-755 font-black hover:underline"
+                    >
+                      + Add Demand
+                    </button>
+                  </div>
+                  {myRequirements.length === 0 ? (
+                    <div className="py-8 text-center text-slate-455 text-sm">
+                      <p>No procurement demands listed yet.</p>
+                      <button 
+                        onClick={() => { setActiveTab('my-requirements'); setIsCreatingRequirement(true); }}
+                        className="mt-2 text-emerald-600 font-bold text-xs bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg transition"
+                      >
+                        + Post Demand / தேவையைச் சேர்க்க
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-slate-100 max-h-[250px] overflow-y-auto pr-1">
+                      {myRequirements.map(req => (
+                        <div key={req.id} className="py-3 flex justify-between items-center hover:bg-slate-50/50 transition px-1 rounded-lg">
+                          <div>
+                            <div className="font-bold text-slate-800 text-sm">🍉 {req.crop_name}</div>
+                            <div className="text-xs text-slate-500 mt-0.5">Need: {req.required_quantity} {req.unit} | Location: {req.preferred_location}</div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-emerald-750 font-black text-sm">Max Budget: ₹{req.max_price}/{req.unit}</span>
+                            <button 
+                              onClick={() => { handleSelectRequirement(req); setActiveTab('my-requirements'); setIsCreatingRequirement(false); }}
+                              className="bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 text-slate-700 text-xs px-2.5 py-1 rounded border font-semibold transition"
+                            >
+                              Find Suppliers
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Panel: Recent Farmer crops */}
+                <div className="bg-white border rounded-xl p-5 shadow-sm space-y-4">
+                  <div className="flex justify-between items-center border-b pb-2">
+                    <h3 className="text-base font-bold text-slate-800">Available Crops on Sale / விவசாய பயிர்கள்</h3>
+                    <button 
+                      onClick={() => setActiveTab('find-crops')}
+                      className="text-xs text-emerald-755 font-black hover:underline"
+                    >
+                      Browse Marketplace
+                    </button>
+                  </div>
+                  {marketplaceCrops.length === 0 ? (
+                    <p className="text-sm text-slate-400 italic py-4">No crops uploaded by local farmers currently.</p>
+                  ) : (
+                    <div className="divide-y divide-slate-100 max-h-[250px] overflow-y-auto pr-1">
+                      {marketplaceCrops.map(crop => (
+                        <div key={crop.id} className="py-3 flex justify-between items-center hover:bg-slate-50/50 transition px-1 rounded-lg">
+                          <div>
+                            <div className="font-bold text-slate-800 text-sm">🍅 {crop.crop_name} ({crop.variety})</div>
+                            <div className="text-xs text-slate-550 mt-0.5">Qty: {crop.quantity} {crop.unit} | Loc: {crop.location}</div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-emerald-700 font-bold text-sm">₹{crop.expected_price}/{crop.unit}</span>
+                            <button 
+                              onClick={() => { handleSelectCrop(crop); setActiveTab('find-crops'); }}
+                              className="bg-emerald-605 hover:bg-emerald-700 text-white text-xs px-2.5 py-1 rounded font-bold transition shadow-xs"
+                            >
+                              Send Offer
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+              </div>
+
+              {/* Panel: Offers Placed Status */}
+              <div className="bg-white border rounded-xl p-5 shadow-sm space-y-4">
+                <div className="flex justify-between items-center border-b pb-2">
+                  <h3 className="text-base font-bold text-slate-800">My Placed Offers Status / சலுகைகள்</h3>
+                  <button 
+                    onClick={() => setActiveTab('my-offers')}
+                    className="text-xs text-emerald-755 font-black hover:underline"
+                  >
+                    View All Bids
+                  </button>
+                </div>
+                {myOffers.length === 0 ? (
+                  <p className="text-sm text-slate-400 py-4 text-center">No offers placed yet. Visit the Find Crops tab to submit offers.</p>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {myOffers.slice(0, 3).map(offer => (
+                      <div key={offer.id} className="border border-slate-150 rounded-xl p-4 bg-white space-y-3 flex flex-col justify-between hover:shadow-md transition">
+                        <div>
+                          <div className="flex justify-between items-center border-b pb-2">
+                            <h4 className="font-bold text-slate-800 text-sm">🍅 {offer.crop.crop_name}</h4>
+                            <span className={`text-[9px] px-2 py-0.5 rounded font-black uppercase ${
+                              offer.status === 'accepted' ? 'bg-emerald-100 text-emerald-800' :
+                              offer.status === 'countered' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700'
+                            }`}>
+                              {offer.status}
+                            </span>
+                          </div>
+                          <div className="bg-slate-50 p-2.5 rounded-lg border text-xs text-slate-655 mt-3 space-y-1">
+                            <div>Farmer Expected: <span className="font-bold">₹{offer.crop.expected_price}/{offer.crop.unit}</span></div>
+                            <div>My Offered: <span className="font-bold text-emerald-700">₹{offer.offered_price_per_unit}/{offer.crop.unit}</span></div>
+                            {offer.status === 'countered' && <div className="text-amber-600 font-bold text-[9px] mt-1">⚠️ Farmer countered offer! Click negotiate to review.</div>}
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => { handleSelectOffer(offer); }}
+                          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-lg text-xs transition"
+                        >
+                          Continue Negotiation
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* 4. BUYER MY REQUIREMENTS TAB (Checklist + Details / Form) */}
+          {currentUser?.role === 'BUYER' && activeTab === 'my-requirements' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+              {/* Left Column: My demands list & Form */}
+              <div className="lg:col-span-1 space-y-6">
+                
+                {/* Requirement Form */}
+                {isCreatingRequirement || myRequirements.length === 0 ? (
                   <div className="bg-white border rounded-xl p-4.5 shadow-sm space-y-3">
-                    <h3 className="text-lg font-bold text-slate-700 uppercase tracking-wider border-b pb-2 flex items-center gap-1.5 mb-3">
-                      <ShoppingBag className="w-4 h-4 text-emerald-600" />
-                      <span>Define Crop Requirement</span>
-                    </h3>
-                    
-                    <form onSubmit={handleAddRequirement} className="space-y-3 text-slate-700 text-xs">
+                    <h3 className="text-lg font-bold text-slate-700 border-b pb-2 mb-3">Define Crop Requirement / தேவைகள்</h3>
+                    <form onSubmit={(e) => { handleAddRequirement(e); setIsCreatingRequirement(false); }} className="space-y-3 text-slate-750 text-xs">
                       <div className="grid grid-cols-2 gap-2">
                         <div>
                           <label className="block text-[9px] font-bold text-slate-500 uppercase">Crop</label>
                           <select 
-                            className="w-full p-2 border rounded-lg bg-slate-50 text-xs font-semibold"
+                            className="w-full p-2 border rounded-lg bg-slate-50 text-xs font-semibold text-slate-800"
                             value={reqForm.crop_name}
                             onChange={(e) => setReqForm({...reqForm, crop_name: e.target.value})}
                           >
@@ -1245,7 +1265,7 @@ export default function App() {
                             type="text" 
                             required
                             placeholder="e.g. Nashik, Pune"
-                            className="w-full p-2 border rounded-lg text-xs"
+                            className="w-full p-2 border rounded-lg text-xs text-slate-800"
                             value={reqForm.preferred_location}
                             onChange={(e) => setReqForm({...reqForm, preferred_location: e.target.value})}
                           />
@@ -1259,7 +1279,7 @@ export default function App() {
                             type="number" 
                             required
                             min="1"
-                            className="w-full p-2 border rounded-lg text-xs"
+                            className="w-full p-2 border rounded-lg text-xs text-slate-800"
                             value={reqForm.required_quantity}
                             onChange={(e) => setReqForm({...reqForm, required_quantity: e.target.value})}
                           />
@@ -1267,13 +1287,13 @@ export default function App() {
                         <div>
                           <label className="block text-[9px] font-bold text-slate-500 uppercase">Unit</label>
                           <select 
-                            className="w-full p-2 border rounded-lg bg-slate-50 text-xs font-semibold"
+                            className="w-full p-2 border rounded-lg bg-slate-50 text-xs font-semibold text-slate-800"
                             value={reqForm.unit}
                             onChange={(e) => setReqForm({...reqForm, unit: e.target.value})}
                           >
                             <option value="kg">kg</option>
                             <option value="tons">Tons</option>
-                            <option value="bags">Bags</option>
+                            <option value="bags">Bags (50kg)</option>
                           </select>
                         </div>
                         <div>
@@ -1281,7 +1301,7 @@ export default function App() {
                           <input 
                             type="number" 
                             required
-                            className="w-full p-2 border rounded-lg text-xs"
+                            className="w-full p-2 border rounded-lg text-xs text-slate-800"
                             value={reqForm.max_distance_km}
                             onChange={(e) => setReqForm({...reqForm, max_distance_km: e.target.value})}
                           />
@@ -1294,249 +1314,165 @@ export default function App() {
                           type="number" 
                           required
                           min="1"
-                          className="w-full p-2 border rounded-lg text-xs"
+                          className="w-full p-2 border rounded-lg text-xs text-slate-800"
                           value={reqForm.max_price}
                           onChange={(e) => setReqForm({...reqForm, max_price: e.target.value})}
                         />
                       </div>
 
-                      <button 
-                        type="submit" 
-                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-lg text-xs transition shadow-xs"
-                      >
-                        Save Demand Profile
-                      </button>
+                      <div className="flex gap-2 pt-2">
+                        {myRequirements.length > 0 && (
+                          <button 
+                            type="button" 
+                            onClick={() => setIsCreatingRequirement(false)}
+                            className="flex-1 bg-slate-100 hover:bg-slate-200 border text-slate-700 py-2 rounded-lg text-xs transition"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                        <button 
+                          type="submit" 
+                          className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-lg text-xs transition shadow-xs"
+                        >
+                          Publish demand
+                        </button>
+                      </div>
                     </form>
                   </div>
+                ) : null}
 
-                  {/* My active demands list */}
-                  <div className="bg-white border rounded-xl shadow-sm p-4.5 space-y-2">
-                    <h3 className="text-lg font-bold text-slate-700 uppercase tracking-wider border-b pb-2 mb-3">
-                      My Active Demands / என் தேவைகள்
+                {/* My Active demands checklist list */}
+                <div className="bg-white border rounded-xl shadow-sm p-4.5 space-y-2">
+                  <div className="flex justify-between items-center border-b pb-2">
+                    <h3 className="text-lg font-bold text-slate-700 uppercase tracking-wide">
+                      My Demands / என் தேவைகள்
                     </h3>
-                    {myRequirements.length === 0 ? (
-                      <p className="text-xs text-slate-400 italic">No demands listed yet.</p>
-                    ) : (
-                      <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
-                        {myRequirements.map(req => (
-                          <div 
-                            key={req.id} 
-                            onClick={() => handleSelectRequirement(req)}
-                            className={`bg-white border rounded-lg p-3 text-xs flex justify-between items-center cursor-pointer hover:bg-slate-50 transition shadow-xs ${selectedRequirement?.id === req.id ? 'border-emerald-500 bg-emerald-50/30 ring-1 ring-emerald-500' : 'border-slate-200'}`}
-                          >
-                            <div>
-                              <div className="font-bold text-slate-800 text-xs">🌾 {req.crop_name}</div>
-                              <div className="text-[10px] text-slate-500 mt-0.5">
-                                Qty: {req.required_quantity} {req.unit} | Max: {req.max_distance_km} km
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-slate-400 text-[8px] uppercase">Budget</div>
-                              <div className="text-emerald-700 font-bold text-xs">₹{req.max_price}/{req.unit}</div>
+                    <button 
+                      onClick={() => setIsCreatingRequirement(true)}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition shadow-xs"
+                    >
+                      + Add Requirement
+                    </button>
+                  </div>
+
+                  {myRequirements.length === 0 ? (
+                    <p className="text-xs text-slate-400 italic">No demands listed yet.</p>
+                  ) : (
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                      {myRequirements.map(req => (
+                        <div 
+                          key={req.id} 
+                          onClick={() => { handleSelectRequirement(req); setIsCreatingRequirement(false); }}
+                          className={`bg-white border rounded-lg p-3 text-xs flex justify-between items-center cursor-pointer hover:bg-slate-50 transition shadow-xs ${selectedRequirement?.id === req.id && !isCreatingRequirement ? 'border-emerald-500 bg-emerald-50/30 ring-1 ring-emerald-500' : 'border-slate-200'}`}
+                        >
+                          <div>
+                            <div className="font-bold text-slate-800 text-xs">🍉 {req.crop_name}</div>
+                            <div className="text-[10px] text-slate-500 mt-0.5">
+                              Qty: {req.required_quantity} {req.unit} | Max: {req.max_distance_km} km
                             </div>
                           </div>
+                          <div className="text-right">
+                            <div className="text-slate-400 text-[8px] uppercase font-bold">Budget</div>
+                            <div className="text-emerald-700 font-bold text-xs">₹{req.max_price}/{req.unit}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Right Column: Suppliers Matches for selected requirement */}
+              <div className="lg:col-span-2 space-y-6">
+                {selectedRequirement && !isCreatingRequirement ? (
+                  <div className="bg-white border rounded-xl shadow-sm p-4.5 space-y-3">
+                    <h3 className="font-bold text-slate-700 text-lg uppercase flex items-center gap-1.5 border-b pb-2 mb-2">
+                      <Sparkles className="w-4 h-4 text-emerald-500 fill-emerald-100" />
+                      <span>Matching Harvests / பொருத்தமான பயிர்கள்</span>
+                    </h3>
+                    {requirementMatches.length === 0 ? (
+                      <p className="text-sm text-slate-400 italic p-4 text-center">No matching farmer harvest listings found in the region.</p>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {requirementMatches.map(match => (
+                          <RenderSmartMatchDetails 
+                            key={match.crop_id} 
+                            match={match} 
+                            onAction={
+                              <button 
+                                onClick={() => {
+                                  const cropObj = marketplaceCrops.find(c => c.id === match.crop_id);
+                                  if (cropObj) {
+                                    handleOpenOfferModal(cropObj);
+                                  } else {
+                                    handleOpenOfferModal({
+                                      id: match.crop_id,
+                                      crop_name: match.crop_name,
+                                      variety: match.variety,
+                                      quantity: match.quantity,
+                                      unit: match.unit,
+                                      expected_price: match.expected_price,
+                                      location: match.farmer_location,
+                                      farmer_id: match.farmer_id
+                                    });
+                                  }
+                                }}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-lg text-xs transition"
+                              >
+                                Send Offer
+                              </button>
+                            }
+                          />
                         ))}
                       </div>
                     )}
                   </div>
-                </div>
-
-                {/* Right Column (2/3): Suppliers and Sent Offers */}
-                <div className="lg:col-span-2 space-y-6">
-                  
-                  {/* Matching suppliers list */}
-                  {selectedRequirement ? (
-                    <div className="bg-white border rounded-xl shadow-sm p-4.5 space-y-3">
-                      <div className="flex justify-between items-center border-b pb-2 mb-2">
-                        <h3 className="font-bold text-slate-700 text-lg uppercase flex items-center gap-1.5">
-                          <Sparkles className="w-4 h-4 text-emerald-500 fill-emerald-100" />
-                          <span>Find Suppliers / உற்பத்தியாளர்கள் கண்டறிதல் 🤖</span>
-                        </h3>
-                        <span className="text-slate-400 text-[10px] font-semibold">{requirementMatches.length} matching harvests found</span>
-                      </div>
-
-                      {requirementMatches.length === 0 ? (
-                        <p className="text-sm text-slate-400 italic p-4 text-center">No matching farmer harvest listings found in the region.</p>
-                      ) : (
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-left border-collapse text-sm">
-                            <thead>
-                              <tr className="bg-slate-50 text-slate-500 border-b border-slate-200">
-                                <th className="p-3 font-bold uppercase text-[9px]">Match %</th>
-                                <th className="p-3 font-bold uppercase text-[9px]">Farmer</th>
-                                <th className="p-3 font-bold uppercase text-[9px] text-center">Crop Match</th>
-                                <th className="p-3 font-bold uppercase text-[9px] text-center">Distance</th>
-                                <th className="p-3 font-bold uppercase text-[9px] text-center">Supply Quantity</th>
-                                <th className="p-3 font-bold uppercase text-[9px] text-center">Price Fit</th>
-                                <th className="p-3 font-bold uppercase text-[9px] text-right">Action</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100">
-                              {requirementMatches.map(match => (
-                                <tr key={match.crop_id} className="hover:bg-slate-50/50 transition">
-                                  <td className="p-3">
-                                    <span className="bg-emerald-50 text-emerald-700 text-xs px-2.5 py-0.5 rounded-full font-black border border-emerald-200 shadow-xs">
-                                      {match.score_details.total_score}%
-                                    </span>
-                                  </td>
-                                  <td className="p-3">
-                                    <div className="font-bold text-slate-800 flex items-center gap-1">
-                                      {match.farmer_name}
-                                      {match.farmer_verified && (
-                                        <span className="bg-emerald-100 text-emerald-800 text-[8px] px-1 py-0.2 rounded font-bold" title="Verified Farmer">✓ Verified</span>
-                                      )}
-                                    </div>
-                                    <div className="text-[10px] text-slate-400 mt-0.5">{match.farmer_location}</div>
-                                  </td>
-                                  <td className="p-3 text-center font-bold text-emerald-600">
-                                    {match.score_details.crop_score > 0 ? '✓ 40/40' : '✗ 0/40'}
-                                  </td>
-                                  <td className="p-3 text-center">
-                                    <div className="font-semibold text-slate-700">{match.score_details.distance_km} km</div>
-                                    <div className="text-[9px] text-slate-400">Score: {match.score_details.location_score}/25</div>
-                                  </td>
-                                  <td className="p-3 text-center">
-                                    <div className="font-semibold text-slate-700">{match.quantity} {match.unit}</div>
-                                    <div className="text-[9px] text-slate-400">Expected ₹{match.expected_price}</div>
-                                  </td>
-                                  <td className="p-3 text-center font-semibold text-slate-650">
-                                    Score: {match.score_details.price_score}/15
-                                  </td>
-                                  <td className="p-3 text-right">
-                                    <button 
-                                      onClick={() => {
-                                        const cropObj = marketplaceCrops.find(c => c.id === match.crop_id);
-                                        if (cropObj) {
-                                          handleOpenOfferModal(cropObj);
-                                        } else {
-                                          handleOpenOfferModal({
-                                            id: match.crop_id,
-                                            crop_name: match.crop_name,
-                                            variety: match.variety,
-                                            quantity: match.quantity,
-                                            unit: match.unit,
-                                            expected_price: match.expected_price,
-                                            location: match.farmer_location,
-                                            farmer_id: match.farmer_id
-                                          });
-                                        }
-                                      }}
-                                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg transition text-[11px] shadow-xs"
-                                    >
-                                      Send Offer
-                                    </button>
-                                  </td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="bg-white border rounded-xl p-12 text-center text-slate-400 shadow-sm flex flex-col items-center justify-center min-h-[220px]">
-                      <ShoppingBag className="w-12 h-12 text-emerald-600 text-opacity-25 mb-3" />
-                      <h4 className="font-extrabold text-slate-700 text-xs uppercase tracking-wider">No Demand Requirement Selected</h4>
-                      <p className="text-[11px] text-slate-400 mt-1 max-w-sm">Select one of your crop procurement requirements on the left to run automatic smart matching checks against local farm harvests.</p>
-                    </div>
-                  )}
-
-                  {/* My Offers Sent */}
-                  <div className="bg-white border rounded-xl shadow-sm p-4.5 space-y-3">
-                    <h3 className="text-lg font-bold text-slate-700 uppercase tracking-wider border-b pb-2 mb-3">
-                      My Offers Sent to Farmers / அனுப்பிய சலுகைகள்
-                    </h3>
-                    {myOffers.length === 0 ? (
-                      <p className="text-sm text-slate-400 italic p-2 text-center">No offers placed yet. Visit the Marketplace to send offers.</p>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse text-sm">
-                          <thead>
-                            <tr className="bg-slate-50 text-slate-500 border-b border-slate-200">
-                              <th className="p-3 font-bold uppercase text-[9px]">Crop Listing</th>
-                              <th className="p-3 font-bold uppercase text-[9px] text-center">Offered Price</th>
-                              <th className="p-3 font-bold uppercase text-[9px] text-center">Quantity</th>
-                              <th className="p-3 font-bold uppercase text-[9px] text-center">Status</th>
-                              <th className="p-3 font-bold uppercase text-[9px] text-right">Action</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-slate-100">
-                            {myOffers.map(offer => (
-                              <tr key={offer.id} className="hover:bg-slate-50/50 transition">
-                                <td className="p-3 font-bold text-slate-800">
-                                  🌾 {offer.crop.crop_name} ({offer.crop.variety})
-                                  <div className="text-[10px] text-slate-400 font-medium">Farmer ID: {offer.crop.farmer_id} • {offer.crop.location}</div>
-                                </td>
-                                <td className="p-3 text-center font-bold text-emerald-700">
-                                  ₹{offer.offered_price_per_unit}/{offer.crop.unit}
-                                </td>
-                                <td className="p-3 text-center text-slate-655 font-semibold">
-                                  {offer.quantity} {offer.crop.unit}
-                                </td>
-                                <td className="p-3 text-center">
-                                  <span className={`px-2 py-0.5 rounded text-[9px] uppercase font-bold ${
-                                    offer.status === 'accepted' ? 'bg-emerald-100 text-emerald-850' : 
-                                    offer.status === 'rejected' ? 'bg-rose-100 text-rose-800' :
-                                    offer.status === 'countered' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-850'
-                                  }`}>
-                                    {offer.status}
-                                  </span>
-                                </td>
-                                <td className="p-3 text-right">
-                                  <button 
-                                    onClick={() => handleSelectOffer(offer)}
-                                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg transition text-[11px] shadow-xs"
-                                  >
-                                    Chat Negotiation
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
+                ) : (
+                  <div className="bg-white border rounded-xl p-16 text-center text-slate-400 shadow-sm flex flex-col items-center justify-center min-h-[350px]">
+                    <ShoppingBag className="w-12 h-12 text-emerald-600 text-opacity-25 mb-3" />
+                    <h4 className="font-extrabold text-slate-750 text-base uppercase tracking-wider">No Demand Requirement Selected</h4>
+                    <p className="text-sm text-slate-400 mt-1 max-w-sm">Select one of your crop procurement requirements from the left to find matching supplier listings and submit price offers.</p>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           )}
 
-          {/* 4. MARKETPLACE TAB */}
-          {currentUser?.role === 'BUYER' && activeTab === 'marketplace' && (
+          {/* 5. BUYER FIND CROPS TAB (Marketplace) */}
+          {currentUser?.role === 'BUYER' && activeTab === 'find-crops' && (
             <div className="space-y-4">
               <div className="flex justify-between items-center border-b pb-2.5 mb-3">
                 <h3 className="text-lg font-bold text-slate-700 uppercase tracking-wider">
-                  Available Farmer Harvests / சந்தையில் உள்ள பயிர்கள்
+                  Available Farmer Harvests / விவசாய பயிர்கள் சந்தை
                 </h3>
-                <span className="text-slate-400 text-xs font-semibold">{marketplaceCrops.length} harvests for sale</span>
+                <span className="text-slate-500 text-xs font-semibold">{marketplaceCrops.length} harvests for sale</span>
               </div>
               
               {marketplaceCrops.length === 0 ? (
-                <p className="text-xs text-slate-400 italic text-center py-16 bg-white border rounded-xl shadow-sm">No harvests are listed for sale at this time.</p>
+                <p className="text-sm text-slate-400 italic text-center py-16 bg-white border rounded-xl shadow-sm">No harvests are listed for sale at this time.</p>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {marketplaceCrops.map(crop => (
-                    <div key={crop.id} className="bg-white border rounded-xl p-5 space-y-4 shadow-sm flex flex-col justify-between hover:shadow-md transition">
+                    <div key={crop.id} className="bg-white border rounded-xl p-5 space-y-4 shadow-sm flex flex-col justify-between hover:shadow-md hover:border-slate-300 transition">
                       <div>
-                        <div className="flex justify-between items-start mb-2">
+                        <div className="flex justify-between items-start mb-2 border-b pb-2">
                           <div>
-                            <h4 className="font-extrabold text-slate-800 text-base">🍅 {crop.crop_name}</h4>
-                            <div className="text-xs text-slate-500">{crop.variety || 'Standard Variety'}</div>
+                            <h4 className="font-bold text-slate-800 text-base">🍅 {crop.crop_name}</h4>
+                            <div className="text-xs text-slate-500 mt-0.5">{crop.variety || 'Standard Variety'}</div>
                           </div>
                           <div className="text-right">
-                            <span className="text-slate-400 text-[9px] block uppercase font-medium">Expected Price</span>
+                            <span className="text-slate-400 text-[9px] block uppercase font-bold font-bold">Expected Price</span>
                             <span className="text-emerald-700 font-extrabold text-base">₹{crop.expected_price}/{crop.unit}</span>
                           </div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2 text-xs text-slate-550 bg-slate-50 p-2.5 rounded border border-slate-100 mb-3">
+                        <div className="grid grid-cols-2 gap-2 text-xs text-slate-650 bg-slate-50 p-2.5 rounded border mb-3">
                           <div className="flex items-center gap-1"><Scale className="w-3.5 h-3.5 text-slate-400" /> Qty: <span className="font-semibold text-slate-700">{crop.quantity} {crop.unit}</span></div>
                           <div className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5 text-slate-400" /> Loc: <span className="font-semibold text-slate-700">{crop.location}</span></div>
                         </div>
 
                         {crop.description && (
-                          <p className="text-[11px] text-slate-400 italic line-clamp-2">"{crop.description}"</p>
+                          <p className="text-[11px] text-slate-500 italic line-clamp-2 bg-slate-50/50 p-2 rounded">"{crop.description}"</p>
                         )}
                       </div>
 
@@ -1554,6 +1490,71 @@ export default function App() {
                   ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* 6. BUYER MY OFFERS TAB (Bids list) */}
+          {currentUser?.role === 'BUYER' && activeTab === 'my-offers' && (
+            <div className="space-y-6">
+              <div className="bg-white border rounded-xl shadow-sm p-5 space-y-4">
+                <div className="flex justify-between items-center border-b pb-2 mb-2">
+                  <h3 className="text-lg font-bold text-slate-700 uppercase tracking-wider">
+                    My Bids comparative matrix / அனுப்பிய சலுகைகள்
+                  </h3>
+                  <span className="text-slate-550 text-xs font-semibold">{myOffers.length} offers submitted</span>
+                </div>
+
+                {myOffers.length === 0 ? (
+                  <p className="text-sm text-slate-405 italic p-6 text-center">No bids submitted yet. Visit the Find Crops tab to submit offers.</p>
+                ) : (
+                  <div className="overflow-x-auto border rounded-xl bg-white shadow-xs">
+                    <table className="w-full text-left border-collapse text-sm">
+                      <thead>
+                        <tr className="bg-slate-50 text-slate-500 border-b border-slate-200">
+                          <th className="p-3.5 font-bold uppercase text-[9px]">Crop Listing</th>
+                          <th className="p-3.5 font-bold uppercase text-[9px] text-center font-bold">My Offered Price</th>
+                          <th className="p-3.5 font-bold uppercase text-[9px] text-center">Quantity</th>
+                          <th className="p-3.5 font-bold uppercase text-[9px] text-center">Status</th>
+                          <th className="p-3.5 font-bold uppercase text-[9px] text-right">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {myOffers.map(offer => (
+                          <tr key={offer.id} className="hover:bg-slate-50/50 transition">
+                            <td className="p-3.5 font-bold text-slate-800">
+                              🌾 {offer.crop.crop_name} ({offer.crop.variety})
+                              <div className="text-[10px] text-slate-400 font-medium">Farmer ID: {offer.crop.farmer_id} • {offer.crop.location}</div>
+                            </td>
+                            <td className="p-3.5 text-center font-bold text-emerald-700">
+                              ₹{offer.offered_price_per_unit}/{offer.crop.unit}
+                            </td>
+                            <td className="p-3.5 text-center text-slate-655 font-semibold">
+                              {offer.quantity} {offer.crop.unit}
+                            </td>
+                            <td className="p-3.5 text-center">
+                              <span className={`px-2 py-0.5 rounded text-[9px] uppercase font-bold ${
+                                offer.status === 'accepted' ? 'bg-emerald-100 text-emerald-850' : 
+                                offer.status === 'rejected' ? 'bg-rose-100 text-rose-800' :
+                                offer.status === 'countered' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-850'
+                              }`}>
+                                {offer.status}
+                              </span>
+                            </td>
+                            <td className="p-3.5 text-right">
+                              <button 
+                                onClick={() => handleSelectOffer(offer)}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg transition text-[11px] shadow-xs"
+                              >
+                                Chat Negotiation
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -1593,7 +1594,11 @@ export default function App() {
                     <div className="font-bold text-[9px] text-slate-400 uppercase tracking-wide">Counterparty Details</div>
                     <div className="font-black text-slate-800 text-xs flex items-center gap-1">
                       {currentUser.role === 'FARMER' ? selectedOffer.buyer.name : `Farmer (ID: ${selectedOffer.crop.farmer_id})`}
-                      {currentUser.role === 'FARMER' && selectedOffer.buyer.is_verified && <span className="text-emerald-600 text-[8px] font-bold bg-emerald-50 px-1 rounded border">Verified</span>}
+                      {currentUser.role === 'FARMER' ? (
+                        selectedOffer.buyer.is_verified && <span className="text-emerald-600 text-[8px] font-bold bg-emerald-50 px-1 rounded border">✓ Verified Buyer</span>
+                      ) : (
+                        <span className="text-emerald-600 text-[8px] font-bold bg-emerald-50 px-1 rounded border">✓ Verified Farmer</span>
+                      )}
                     </div>
                     <div className="text-[11px] text-slate-550">Contact: {currentUser.role === 'FARMER' ? selectedOffer.buyer.phone : 'Farmer User'}</div>
                     <div className="text-[11px] text-slate-550">Location: {currentUser.role === 'FARMER' ? selectedOffer.buyer.location : selectedOffer.crop.location}</div>
