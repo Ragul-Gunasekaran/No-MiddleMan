@@ -986,18 +986,30 @@ export default function App() {
                           const matchingCrop = myCrops.find(c => c.crop_name.toLowerCase().trim() === req.crop_name.toLowerCase().trim());
                           if (!matchingCrop) return null;
                           
+                          // Find real buyer user from loaded users
+                          const buyerUser = users.find(u => u.id === req.buyer_id);
+                          const buyerName = buyerUser ? buyerUser.name : (req.buyer_id === 2 ? 'BigMart Wholesale' : 'Local Buyer');
+                          const buyerVerified = buyerUser ? buyerUser.is_verified : (req.buyer_id === 2);
+
                           // Calculate smart score details
                           const crop_score = 40.0;
-                          const location_score = req.preferred_location.toLowerCase() === matchingCrop.location.toLowerCase() ? 25.0 : 10.0;
-                          const quantity_score = 20.0; // simple mock
-                          const price_score = matchingCrop.expected_price <= req.max_price ? 15.0 : 0.0;
-                          const total_score = crop_score + location_score + quantity_score + price_score;
+                          const location_score = req.preferred_location.toLowerCase().trim() === matchingCrop.location.toLowerCase().trim() ? 25.0 : 10.0;
+                          const quantity_score = 20.0;
+                          
+                          let price_score = 0.0;
+                          if (matchingCrop.expected_price <= req.max_price * 0.8) {
+                            price_score = 15.0;
+                          } else if (matchingCrop.expected_price <= req.max_price) {
+                            const ratio = (matchingCrop.expected_price - req.max_price * 0.8) / (req.max_price * 0.2);
+                            price_score = Math.round((15.0 - ratio * 5.0) * 10) / 10;
+                          }
+                          const total_score = Math.round((crop_score + location_score + quantity_score + price_score) * 10) / 10;
                           
                           const matchObj = {
                             id: req.id,
                             score_details: { total_score, crop_score, location_score, quantity_score, price_score, distance_km: 0.0 },
-                            buyer_name: req.buyer_id === 2 ? 'BigMart Wholesale' : 'Local Buyer',
-                            buyer_verified: true,
+                            buyer_name: buyerName,
+                            buyer_verified: buyerVerified,
                             crop_name: req.crop_name,
                             required_quantity: req.required_quantity,
                             unit: req.unit,
