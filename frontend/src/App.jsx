@@ -452,10 +452,10 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex font-sans text-slate-800">
+    <div className="min-h-screen bg-slate-50 flex font-sans text-slate-800 w-full">
       
-      {/* Left Sidebar */}
-      <aside className="w-64 bg-slate-900 text-slate-200 flex flex-col fixed inset-y-0 left-0 z-30 border-r border-slate-800 shadow-xl">
+      {/* Left Sidebar - Hidden on mobile/tablet, sticky on desktop */}
+      <aside className="hidden lg:flex w-64 bg-slate-900 text-slate-200 flex-col fixed inset-y-0 left-0 z-30 border-r border-slate-800 shadow-xl">
         {/* Sidebar Header */}
         <div className="p-5 border-b border-slate-800 flex items-center gap-2">
           <Sprout className="w-6 h-6 text-emerald-400" />
@@ -607,13 +607,13 @@ export default function App() {
         </div>
       </aside>
 
-      {/* Main Content Area */}
-      <div className="flex-1 pl-64 flex flex-col min-h-screen">
+      {/* Main Content Area - Full width on mobile/tablet, offset by sidebar width on desktop */}
+      <div className="flex-1 pl-0 lg:pl-64 flex flex-col min-h-screen w-full">
         
         {/* Top Header */}
         <header className="bg-white border-b h-16 sticky top-0 z-20 flex items-center justify-between px-6 shadow-sm">
           <div>
-            <h2 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">
+            <h2 className="text-xs lg:text-sm font-extrabold text-slate-800 uppercase tracking-wider">
               {activeTab === 'farmer' && 'Farmer Dashboard / விவசாயி கட்டுப்பாட்டு அறை'}
               {activeTab === 'upload' && 'Upload Crop Listings / அறுவடை விவரம் பதிவேற்றம்'}
               {activeTab === 'buyer' && 'Buyer Demands / கொள்முதல் தேவைகள்'}
@@ -622,6 +622,21 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-4 text-xs font-semibold text-slate-600">
+            {/* Mobile/Tablet user profile switcher (only when sidebar is hidden) */}
+            <div className="lg:hidden flex items-center gap-1 bg-slate-100 hover:bg-slate-200 border text-slate-700 px-2 py-1 rounded-md transition">
+              <select 
+                value={currentUser?.id || ''} 
+                onChange={(e) => handleUserSwitch(e.target.value)}
+                className="bg-transparent text-[11px] outline-none cursor-pointer font-bold"
+              >
+                {users.map(u => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} ({u.role.toLowerCase()})
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div className="relative p-2 text-slate-400 hover:text-slate-600 cursor-pointer transition hover:bg-slate-50 rounded-full">
               <Bell className="w-4 h-4" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-emerald-500 rounded-full"></span>
@@ -647,6 +662,41 @@ export default function App() {
             </div>
           </div>
         </header>
+
+        {/* Mobile/Tablet Tab Navigation (only visible when sidebar is hidden) */}
+        <div className="lg:hidden flex border-b bg-white divide-x divide-slate-100">
+          {currentUser?.role === 'FARMER' ? (
+            <>
+              <button 
+                onClick={() => setActiveTab('farmer')} 
+                className={`flex-1 py-3 text-center text-xs font-bold transition ${activeTab === 'farmer' ? 'border-b-2 border-emerald-600 text-emerald-700 bg-emerald-50/10' : 'text-slate-500 hover:bg-slate-50'}`}
+              >
+                Dashboard / முகப்பு
+              </button>
+              <button 
+                onClick={() => setActiveTab('upload')} 
+                className={`flex-1 py-3 text-center text-xs font-bold transition ${activeTab === 'upload' ? 'border-b-2 border-emerald-600 text-emerald-700 bg-emerald-50/10' : 'text-slate-500 hover:bg-slate-50'}`}
+              >
+                Upload Crop / பதிவேற்று
+              </button>
+            </>
+          ) : (
+            <>
+              <button 
+                onClick={() => setActiveTab('buyer')} 
+                className={`flex-1 py-3 text-center text-xs font-bold transition ${activeTab === 'buyer' ? 'border-b-2 border-emerald-600 text-emerald-700 bg-emerald-50/10' : 'text-slate-500 hover:bg-slate-50'}`}
+              >
+                My Demands / என் தேவைகள்
+              </button>
+              <button 
+                onClick={() => setActiveTab('marketplace')} 
+                className={`flex-1 py-3 text-center text-xs font-bold transition ${activeTab === 'marketplace' ? 'border-b-2 border-emerald-600 text-emerald-700 bg-emerald-50/10' : 'text-slate-500 hover:bg-slate-50'}`}
+              >
+                Marketplace / சந்தை
+              </button>
+            </>
+          )}
+        </div>
 
         {/* Dashboard Content Container */}
         <main className="flex-1 p-6 space-y-6">
@@ -707,13 +757,13 @@ export default function App() {
               </div>
 
               {/* Two Column Layout */}
-              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                 {/* Left Column (1/3): My Listings & Buyer Demands */}
-                <div className="xl:col-span-1 space-y-6">
+                <div className="lg:col-span-1 space-y-6">
                   
                   {/* My Crop Listings */}
                   <div className="bg-white border rounded-xl shadow-sm p-4.5">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b pb-2 mb-3">
+                    <h3 className="text-lg font-bold text-slate-700 uppercase tracking-wider border-b pb-2 mb-3">
                       My Crop Listings / என் பயிர்கள்
                     </h3>
                     {myCrops.length === 0 ? (
@@ -752,7 +802,7 @@ export default function App() {
 
                   {/* Procurement Feeds */}
                   <div className="bg-white border rounded-xl shadow-sm p-4.5 space-y-3">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b pb-2">
+                    <h3 className="text-lg font-bold text-slate-700 uppercase tracking-wider border-b pb-2 mb-3">
                       Active Buyer Demands / கொள்முதல் தேவைகள்
                     </h3>
                     {allRequirements.length === 0 ? (
@@ -786,7 +836,7 @@ export default function App() {
                 </div>
 
                 {/* Right Column (2/3): Selected Listing Smart Matches & Comparative Table */}
-                <div className="xl:col-span-2 space-y-6">
+                <div className="lg:col-span-2 space-y-6">
                   {selectedCrop ? (
                     <div className="space-y-6">
                       
@@ -838,7 +888,7 @@ export default function App() {
                       {/* Smart Match Table Layout */}
                       <div className="bg-white border rounded-xl shadow-sm p-4.5 space-y-3">
                         <div className="flex justify-between items-center border-b pb-2 mb-2">
-                          <h4 className="font-extrabold text-slate-800 text-xs uppercase flex items-center gap-1.5">
+                          <h4 className="font-bold text-slate-700 text-lg uppercase flex items-center gap-1.5">
                             <Sparkles className="w-4 h-4 text-emerald-500 fill-emerald-100" />
                             <span>Smart Matches Discovery 🤖</span>
                           </h4>
@@ -846,10 +896,10 @@ export default function App() {
                         </div>
 
                         {cropMatches.length === 0 ? (
-                          <p className="text-xs text-slate-400 italic p-4 text-center">No buyer requirements matched this crop. Buyers need to list requirements.</p>
+                          <p className="text-sm text-slate-400 italic p-4 text-center">No buyer requirements matched this crop. Buyers need to list requirements.</p>
                         ) : (
                           <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse text-xs">
+                            <table className="w-full text-left border-collapse text-sm">
                               <thead>
                                 <tr className="bg-slate-50 text-slate-500 border-b border-slate-200">
                                   <th className="p-3 font-bold uppercase text-[9px]">Match %</th>
@@ -906,16 +956,16 @@ export default function App() {
 
                       {/* Offers Comparison Desktop Table */}
                       <div className="bg-white border rounded-xl shadow-sm p-4.5 space-y-3">
-                        <h4 className="font-extrabold text-slate-800 text-xs uppercase flex items-center gap-1.5 border-b pb-2 mb-2">
+                        <h4 className="font-bold text-slate-700 text-lg uppercase flex items-center gap-1.5 border-b pb-2 mb-2">
                           <IndianRupee className="w-4 h-4 text-emerald-600" />
                           <span>Offers received & comparison / பெறப்பட்ட சலுகைகள்</span>
                         </h4>
 
                         {cropOffers.length === 0 ? (
-                          <p className="text-xs text-slate-400 italic p-4 text-center">No offers received yet. Buyers must send offers from the marketplace.</p>
+                          <p className="text-sm text-slate-400 italic p-4 text-center">No offers received yet. Buyers must send offers from the marketplace.</p>
                         ) : (
                           <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse text-xs">
+                            <table className="w-full text-left border-collapse text-sm">
                               <thead>
                                 <tr className="bg-slate-50 text-slate-500 border-b border-slate-200">
                                   <th className="p-3 font-bold uppercase text-[9px]">Buyer</th>
@@ -1161,14 +1211,14 @@ export default function App() {
               </div>
 
               {/* Grid split */}
-              <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
                 
                 {/* Left Column (1/3): Form and Demands list */}
-                <div className="xl:col-span-1 space-y-6">
+                <div className="lg:col-span-1 space-y-6">
                   
                   {/* Post Form */}
                   <div className="bg-white border rounded-xl p-4.5 shadow-sm space-y-3">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b pb-2 flex items-center gap-1.5">
+                    <h3 className="text-lg font-bold text-slate-700 uppercase tracking-wider border-b pb-2 flex items-center gap-1.5 mb-3">
                       <ShoppingBag className="w-4 h-4 text-emerald-600" />
                       <span>Define Crop Requirement</span>
                     </h3>
@@ -1261,7 +1311,7 @@ export default function App() {
 
                   {/* My active demands list */}
                   <div className="bg-white border rounded-xl shadow-sm p-4.5 space-y-2">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b pb-2">
+                    <h3 className="text-lg font-bold text-slate-700 uppercase tracking-wider border-b pb-2 mb-3">
                       My Active Demands / என் தேவைகள்
                     </h3>
                     {myRequirements.length === 0 ? (
@@ -1292,13 +1342,13 @@ export default function App() {
                 </div>
 
                 {/* Right Column (2/3): Suppliers and Sent Offers */}
-                <div className="xl:col-span-2 space-y-6">
+                <div className="lg:col-span-2 space-y-6">
                   
                   {/* Matching suppliers list */}
                   {selectedRequirement ? (
                     <div className="bg-white border rounded-xl shadow-sm p-4.5 space-y-3">
                       <div className="flex justify-between items-center border-b pb-2 mb-2">
-                        <h3 className="font-extrabold text-slate-800 text-xs uppercase flex items-center gap-1.5">
+                        <h3 className="font-bold text-slate-700 text-lg uppercase flex items-center gap-1.5">
                           <Sparkles className="w-4 h-4 text-emerald-500 fill-emerald-100" />
                           <span>Find Suppliers / உற்பத்தியாளர்கள் கண்டறிதல் 🤖</span>
                         </h3>
@@ -1306,10 +1356,10 @@ export default function App() {
                       </div>
 
                       {requirementMatches.length === 0 ? (
-                        <p className="text-xs text-slate-400 italic p-4 text-center">No matching farmer harvest listings found in the region.</p>
+                        <p className="text-sm text-slate-400 italic p-4 text-center">No matching farmer harvest listings found in the region.</p>
                       ) : (
                         <div className="overflow-x-auto">
-                          <table className="w-full text-left border-collapse text-xs">
+                          <table className="w-full text-left border-collapse text-sm">
                             <thead>
                               <tr className="bg-slate-50 text-slate-500 border-b border-slate-200">
                                 <th className="p-3 font-bold uppercase text-[9px]">Match %</th>
@@ -1393,14 +1443,14 @@ export default function App() {
 
                   {/* My Offers Sent */}
                   <div className="bg-white border rounded-xl shadow-sm p-4.5 space-y-3">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b pb-2">
+                    <h3 className="text-lg font-bold text-slate-700 uppercase tracking-wider border-b pb-2 mb-3">
                       My Offers Sent to Farmers / அனுப்பிய சலுகைகள்
                     </h3>
                     {myOffers.length === 0 ? (
-                      <p className="text-xs text-slate-400 italic p-2 text-center">No offers placed yet. Visit the Marketplace to send offers.</p>
+                      <p className="text-sm text-slate-400 italic p-2 text-center">No offers placed yet. Visit the Marketplace to send offers.</p>
                     ) : (
                       <div className="overflow-x-auto">
-                        <table className="w-full text-left border-collapse text-xs">
+                        <table className="w-full text-left border-collapse text-sm">
                           <thead>
                             <tr className="bg-slate-50 text-slate-500 border-b border-slate-200">
                               <th className="p-3 font-bold uppercase text-[9px]">Crop Listing</th>
@@ -1455,8 +1505,8 @@ export default function App() {
           {/* 4. MARKETPLACE TAB */}
           {currentUser?.role === 'BUYER' && activeTab === 'marketplace' && (
             <div className="space-y-4">
-              <div className="flex justify-between items-center border-b pb-2.5">
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+              <div className="flex justify-between items-center border-b pb-2.5 mb-3">
+                <h3 className="text-lg font-bold text-slate-700 uppercase tracking-wider">
                   Available Farmer Harvests / சந்தையில் உள்ள பயிர்கள்
                 </h3>
                 <span className="text-slate-400 text-xs font-semibold">{marketplaceCrops.length} harvests for sale</span>
