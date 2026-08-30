@@ -446,3 +446,12 @@ def get_negotiation_messages(offer_id: int, current_user: User = Depends(get_cur
         raise HTTPException(status_code=403, detail="Not authorized to view this negotiation thread")
         
     return db.query(Negotiation).filter(Negotiation.offer_id == offer_id).order_by(Negotiation.created_at.asc()).all()
+
+# Serve Frontend static assets in production
+from fastapi.staticfiles import StaticFiles
+import os
+
+frontend_dist_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "dist"))
+if os.path.exists(frontend_dist_path):
+    app.mount("/", StaticFiles(directory=frontend_dist_path, html=True), name="static")
+
