@@ -847,400 +847,198 @@ export default function App() {
 
           {/* 1. FARMER DASHBOARD TAB */}
           {currentUser?.role === 'FARMER' && activeTab === 'farmer' && (
-            <div className="space-y-6">
-              {/* Welcome Banner */}
-              <div className="bg-white border rounded-xl p-6 shadow-sm">
-                <h1 className="text-2xl font-black text-slate-800">Welcome back, {currentUser?.name} 👋 / வரவேற்கிறோம்</h1>
-                <p className="text-sm text-slate-500 mt-1">Here is a quick overview of your direct farm-to-buyer metrics today.</p>
-              </div>
-
-              {/* Farmer Statistics Overview */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white border rounded-xl p-4.5 shadow-sm flex items-center justify-between">
-                  <div className="space-y-1">
-                    <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">My Harvest Listings / என் பயிர்கள்</div>
-                    <div className="text-2xl font-black text-slate-800">{myCrops.length}</div>
-                    <button 
-                      onClick={() => { setActiveTab('my-crops'); setIsCreatingCrop(false); }}
-                      className="text-xs text-emerald-600 font-bold hover:underline flex items-center gap-0.5 mt-1"
-                    >
-                      <span>Manage Crops →</span>
-                    </button>
-                  </div>
-                  <div className="w-16 h-8 text-emerald-500">
-                    <svg className="w-full h-full" viewBox="0 0 100 40">
-                      <rect x="5" y="15" width="12" height="25" fill="currentColor" opacity="0.3" rx="2" />
-                      <rect x="25" y="20" width="12" height="20" fill="currentColor" opacity="0.5" rx="2" />
-                      <rect x="45" y="10" width="12" height="30" fill="currentColor" opacity="0.7" rx="2" />
-                      <rect x="65" y="5" width="12" height="35" fill="currentColor" opacity="0.9" rx="2" />
-                      <rect x="85" y="8" width="12" height="32" fill="currentColor" opacity="1" rx="2" />
-                    </svg>
-                  </div>
-                </div>
-
-                <div className="bg-white border rounded-xl p-4.5 shadow-sm flex items-center justify-between">
-                  <div className="space-y-1">
-                    <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Active Buyer Demands / தேவைகள்</div>
-                    <div className="text-2xl font-black text-slate-800">{allRequirements.length}</div>
-                    <button 
-                      onClick={() => setActiveTab('find-buyers')}
-                      className="text-xs text-emerald-600 font-bold hover:underline flex items-center gap-0.5 mt-1"
-                    >
-                      <span>Find Buyers →</span>
-                    </button>
-                  </div>
-                  <div className="w-16 h-8 text-emerald-500">
-                    <svg className="w-full h-full" viewBox="0 0 100 40">
-                      <path d="M5,35 Q25,15 45,25 T85,10" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-                    </svg>
-                  </div>
-                </div>
-
-                <div className="bg-white border rounded-xl p-4.5 shadow-sm flex items-center justify-between">
-                  <div className="space-y-1">
-                    <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Offers Received / சலுகைகள்</div>
-                    <div className="text-2xl font-black text-slate-800">{cropOffers.length}</div>
-                    <button 
-                      onClick={() => setActiveTab('offers')}
-                      className="text-xs text-emerald-600 font-bold hover:underline flex items-center gap-0.5 mt-1"
-                    >
-                      <span>Review Offers →</span>
-                    </button>
-                  </div>
-                  <div className="w-16 h-8 text-emerald-500">
-                    <svg className="w-full h-full" viewBox="0 0 100 40">
-                      <circle cx="15" cy="20" r="4" fill="currentColor" />
-                      <circle cx="45" cy="15" r="4" fill="currentColor" />
-                      <circle cx="75" cy="30" r="4" fill="currentColor" />
-                      <path d="M15,20 L45,15 L75,30" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="3 3" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-              {/* Dashboard Panels Summary */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                
-                {/* Panel: My Harvest Crops Quick List */}
-                <div className="bg-white border rounded-xl p-5 shadow-sm space-y-4">
-                  <div className="flex justify-between items-center border-b pb-2">
-                    <h3 className="text-base font-bold text-slate-800">My Active Harvests / என் பயிர்கள்</h3>
+            <div className="space-y-8">
+              {/* Spacious, Friendly Welcome Hero */}
+              <div className="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-2xl p-8 text-white shadow-md relative overflow-hidden">
+                <div className="max-w-xl space-y-4">
+                  <span className="text-emerald-100 text-xs uppercase font-extrabold tracking-widest bg-emerald-500/20 px-3 py-1 rounded-full">
+                    Direct Marketplace / நேரடி விவசாய சந்தை
+                  </span>
+                  <h1 className="text-3xl font-black">Welcome back, {currentUser?.name} 👋 / வணக்கம்</h1>
+                  <p className="text-emerald-100 text-sm leading-relaxed">
+                    Post your harvest listings, automatically discover matching buyers in your region, negotiate direct price offers, and secure deals—all with no middle-man.
+                  </p>
+                  <div className="pt-2">
                     <button 
                       onClick={() => { setActiveTab('my-crops'); setIsCreatingCrop(true); }}
-                      className="text-xs text-emerald-755 font-black hover:underline"
+                      className="bg-white hover:bg-emerald-50 text-emerald-800 font-extrabold px-6 py-3 rounded-xl shadow-md transition text-sm flex items-center gap-2"
                     >
-                      + Add Crop
+                      <Plus className="w-5 h-5 text-emerald-700" />
+                      <span>Post New Harvest Crop / அறுவடை விவரம் சேர்க்க</span>
                     </button>
                   </div>
-                  {myCrops.length === 0 ? (
-                    <div className="py-8 text-center text-slate-455 text-sm">
-                      <p>No crops posted yet.</p>
-                      <button 
-                        onClick={() => { setActiveTab('my-crops'); setIsCreatingCrop(true); }}
-                        className="mt-2 text-emerald-600 font-bold text-xs bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg transition"
-                      >
-                        + Add Crop / பயிர் விவரம் சேர்க்க
-                      </button>
+                </div>
+                {/* Decorative background shape */}
+                <div className="absolute right-0 bottom-0 opacity-10 pointer-events-none transform translate-x-12 translate-y-12">
+                  <Sprout className="w-64 h-64" />
+                </div>
+              </div>
+
+              {/* Status Overview Columns - What to do next? */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                {/* Column 1: Crops status */}
+                <div className="bg-white border rounded-2xl p-6 shadow-sm flex flex-col justify-between space-y-4">
+                  <div className="space-y-2">
+                    <div className="p-3 bg-emerald-50 text-emerald-700 rounded-xl w-fit">
+                      <Sprout className="w-6 h-6" />
                     </div>
-                  ) : (
-                    <div className="divide-y divide-slate-100 max-h-[250px] overflow-y-auto pr-1">
-                      {myCrops.map(crop => (
-                        <div key={crop.id} className="py-3 flex justify-between items-center hover:bg-slate-50/50 transition px-1 rounded-lg">
-                          <div>
-                            <div className="font-bold text-slate-800 text-sm">🌾 {crop.crop_name}</div>
-                            <div className="text-xs text-slate-500 mt-0.5">{crop.quantity} {crop.unit} • {crop.location}</div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-emerald-700 font-black text-sm">₹{crop.expected_price}/{crop.unit}</span>
-                            <button 
-                              onClick={() => { handleSelectCrop(crop); setActiveTab('my-crops'); setIsCreatingCrop(false); }}
-                              className="bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 text-slate-700 text-xs px-2.5 py-1 rounded border font-semibold transition"
-                            >
-                              View Crop
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                    <h3 className="text-base font-bold text-slate-800">My Crop Listings / என் பயிர்கள்</h3>
+                    <p className="text-xs text-slate-500 leading-normal">
+                      You currently have <span className="font-extrabold text-slate-850">{myCrops.length}</span> active agricultural crop harvests listed.
+                    </p>
+                  </div>
+                  <div className="pt-2 border-t">
+                    <button 
+                      onClick={() => { setActiveTab('my-crops'); setIsCreatingCrop(false); }}
+                      className="w-full bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold py-2 px-4 rounded-xl text-xs transition border text-center"
+                    >
+                      Manage My Crops / பயிர்கள்
+                    </button>
+                  </div>
                 </div>
 
-                {/* Panel: Best Matching Buyers */}
-                <div className="bg-white border rounded-xl p-5 shadow-sm space-y-4">
-                  <div className="flex justify-between items-center border-b pb-2">
-                    <h3 className="text-base font-bold text-slate-800">Buyers Looking for Your Crops / வாங்குபவர்கள்</h3>
+                {/* Column 2: Matches status */}
+                <div className="bg-white border rounded-2xl p-6 shadow-sm flex flex-col justify-between space-y-4">
+                  <div className="space-y-2">
+                    <div className="p-3 bg-amber-50 text-amber-600 rounded-xl w-fit">
+                      <Search className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-base font-bold text-slate-800">Interested Buyers / பொருத்தங்கள்</h3>
+                    <p className="text-xs text-slate-500 leading-normal">
+                      We found <span className="font-extrabold text-slate-850">{allRequirements.filter(req => myCrops.some(c => c.crop_name.toLowerCase().trim() === req.crop_name.toLowerCase().trim())).length}</span> matching buyers looking for your crops.
+                    </p>
+                  </div>
+                  <div className="pt-2 border-t">
                     <button 
                       onClick={() => setActiveTab('find-buyers')}
-                      className="text-xs text-emerald-755 font-black hover:underline"
+                      className="w-full bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold py-2 px-4 rounded-xl text-xs transition border text-center"
                     >
-                      View All Matches
+                      Find Buyers / வாங்குபவர்கள் தேடு
                     </button>
                   </div>
-                  {myCrops.length === 0 ? (
-                    <p className="text-sm text-slate-400 italic py-4">Upload crops to discover matching buyer requirements.</p>
-                  ) : (
-                    <div className="space-y-3 max-h-[280px] overflow-y-auto pr-1">
-                      {(() => {
-                        let renderCount = 0;
-                        return allRequirements.map(req => {
-                          const matchingCrop = myCrops.find(c => c.crop_name.toLowerCase().trim() === req.crop_name.toLowerCase().trim());
-                          if (!matchingCrop) return null;
-                          
-                          // Find real buyer user from loaded users
-                          const buyerUser = users.find(u => u.id === req.buyer_id);
-                          const buyerName = buyerUser ? buyerUser.name : (req.buyer_id === 2 ? 'BigMart Wholesale' : 'Local Buyer');
-                          const buyerVerified = buyerUser ? buyerUser.is_verified : (req.buyer_id === 2);
-
-                          // Calculate smart score details
-                          const crop_score = 40.0;
-                          const location_score = req.preferred_location.toLowerCase().trim() === matchingCrop.location.toLowerCase().trim() ? 25.0 : 10.0;
-                          const quantity_score = 20.0;
-                          
-                          let price_score = 0.0;
-                          if (matchingCrop.expected_price <= req.max_price * 0.8) {
-                            price_score = 15.0;
-                          } else if (matchingCrop.expected_price <= req.max_price) {
-                            const ratio = (matchingCrop.expected_price - req.max_price * 0.8) / (req.max_price * 0.2);
-                            price_score = Math.round((15.0 - ratio * 5.0) * 10) / 10;
-                          }
-                          const total_score = Math.round((crop_score + location_score + quantity_score + price_score) * 10) / 10;
-                          
-                          const matchObj = {
-                            id: req.id,
-                            score_details: { total_score, crop_score, location_score, quantity_score, price_score, distance_km: 0.0 },
-                            buyer_name: buyerName,
-                            buyer_verified: buyerVerified,
-                            crop_name: req.crop_name,
-                            required_quantity: req.required_quantity,
-                            unit: req.unit,
-                            max_price: req.max_price
-                          };
-
-                          renderCount++;
-                          return (
-                            <RenderSmartMatchDetails 
-                              key={req.id} 
-                              match={matchObj} 
-                              onAction={
-                                <div className="flex justify-between items-center w-full">
-                                  <span className="text-[11px] text-slate-500">Matching Crop: <span className="font-bold">🌾 {matchingCrop.crop_name}</span></span>
-                                  <button 
-                                    onClick={() => { handleSelectCrop(matchingCrop); setSelectedRequirement(req); setActiveTab('find-buyers'); }}
-                                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs transition"
-                                  >
-                                    View Match
-                                  </button>
-                                </div>
-                              }
-                            />
-                          );
-                        });
-                      })()}
-                    </div>
-                  )}
                 </div>
+
+                {/* Column 3: Offers status */}
+                <div className="bg-white border rounded-2xl p-6 shadow-sm flex flex-col justify-between space-y-4">
+                  <div className="space-y-2">
+                    <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl w-fit">
+                      <IndianRupee className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-base font-bold text-slate-800">Offers Received / சலுகைகள்</h3>
+                    <p className="text-xs text-slate-500 leading-normal">
+                      You have received <span className="font-extrabold text-slate-850">{cropOffers.length}</span> price bids and negotiation offers from buyers.
+                    </p>
+                  </div>
+                  <div className="pt-2 border-t">
+                    <button 
+                      onClick={() => setActiveTab('offers')}
+                      className="w-full bg-emerald-650 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-xl text-xs transition text-center shadow-xs"
+                    >
+                      Review Offers / சலுகைகள் காண்க
+                    </button>
+                  </div>
+                </div>
+
               </div>
             </div>
           )}
 
           {/* 3. BUYER DASHBOARD TAB */}
           {currentUser?.role === 'BUYER' && activeTab === 'buyer' && (
-            <div className="space-y-6">
-              {/* Welcome Banner */}
-              <div className="bg-white border rounded-xl p-6 shadow-sm">
-                <h1 className="text-2xl font-black text-slate-800">Welcome back, {currentUser?.name} 👋 / வரவேற்கிறோம்</h1>
-                <p className="text-sm text-slate-500 mt-1">Here is a quick overview of your direct buyer procurement pipeline today.</p>
-              </div>
-
-              {/* Buyer Overview Statistics */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white border rounded-xl p-4.5 shadow-sm flex items-center justify-between">
-                  <div className="space-y-1">
-                    <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">My Active Demands / தேவைகள்</div>
-                    <div className="text-2xl font-black text-slate-800">{myRequirements.length}</div>
+            <div className="space-y-8">
+              {/* Spacious, Friendly Welcome Hero */}
+              <div className="bg-gradient-to-r from-emerald-600 to-teal-700 rounded-2xl p-8 text-white shadow-md relative overflow-hidden">
+                <div className="max-w-xl space-y-4">
+                  <span className="text-emerald-100 text-xs uppercase font-extrabold tracking-widest bg-emerald-500/20 px-3 py-1 rounded-full">
+                    Direct Sourcing / கொள்முதல் மையம்
+                  </span>
+                  <h1 className="text-3xl font-black">Welcome back, {currentUser?.name} 👋 / வணக்கம்</h1>
+                  <p className="text-emerald-105 text-sm leading-relaxed">
+                    Post your sourcing requirements, search for available crops listed by verified farmers, place price offers, and negotiate directly with growers.
+                  </p>
+                  <div className="pt-2">
                     <button 
                       onClick={() => { setActiveTab('my-requirements'); setIsCreatingRequirement(true); }}
-                      className="text-xs text-emerald-650 font-bold hover:underline flex items-center gap-0.5 mt-1"
+                      className="bg-white hover:bg-emerald-50 text-emerald-800 font-extrabold px-6 py-3 rounded-xl shadow-md transition text-sm flex items-center gap-2"
                     >
-                      <span>+ Define Demand / தேவைகள்</span>
+                      <Plus className="w-5 h-5 text-emerald-755" />
+                      <span>Post Crop Requirement / கொள்முதல் தேவை சேர்க்க</span>
                     </button>
                   </div>
-                  <div className="w-16 h-8 text-emerald-500">
-                    <svg className="w-full h-full" viewBox="0 0 100 40">
-                      <rect x="5" y="10" width="12" height="30" fill="currentColor" opacity="0.3" rx="2" />
-                      <rect x="25" y="15" width="12" height="25" fill="currentColor" opacity="0.5" rx="2" />
-                      <rect x="45" y="5" width="12" height="35" fill="currentColor" opacity="0.7" rx="2" />
-                      <rect x="65" y="20" width="12" height="20" fill="currentColor" opacity="0.9" rx="2" />
-                      <rect x="85" y="12" width="12" height="28" fill="currentColor" opacity="1" rx="2" />
-                    </svg>
+                </div>
+                {/* Decorative background shape */}
+                <div className="absolute right-0 bottom-0 opacity-10 pointer-events-none transform translate-x-12 translate-y-12">
+                  <ShoppingBag className="w-64 h-64" />
+                </div>
+              </div>
+
+              {/* Status Overview Columns - What to do next? */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                {/* Column 1: Requirements status */}
+                <div className="bg-white border rounded-2xl p-6 shadow-sm flex flex-col justify-between space-y-4">
+                  <div className="space-y-2">
+                    <div className="p-3 bg-emerald-50 text-emerald-700 rounded-xl w-fit">
+                      <ShoppingBag className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-base font-bold text-slate-800">My Requirements / என் தேவைகள்</h3>
+                    <p className="text-xs text-slate-500 leading-normal">
+                      You are looking to procure <span className="font-extrabold text-slate-850">{myRequirements.length}</span> crop requirements.
+                    </p>
+                  </div>
+                  <div className="pt-2 border-t">
+                    <button 
+                      onClick={() => { setActiveTab('my-requirements'); setIsCreatingRequirement(false); }}
+                      className="w-full bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold py-2 px-4 rounded-xl text-xs transition border text-center"
+                    >
+                      Manage Requirements / என் தேவைகள்
+                    </button>
                   </div>
                 </div>
 
-                <div className="bg-white border rounded-xl p-4.5 shadow-sm flex items-center justify-between">
-                  <div className="space-y-1">
-                    <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Crops for Sale / விவசாய பயிர்கள்</div>
-                    <div className="text-2xl font-black text-slate-800">{marketplaceCrops.length}</div>
+                {/* Column 2: Available crops */}
+                <div className="bg-white border rounded-2xl p-6 shadow-sm flex flex-col justify-between space-y-4">
+                  <div className="space-y-2">
+                    <div className="p-3 bg-amber-50 text-amber-600 rounded-xl w-fit">
+                      <Sprout className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-base font-bold text-slate-800">Crops on Sale / விற்பனை பயிர்கள்</h3>
+                    <p className="text-xs text-slate-500 leading-normal">
+                      There are <span className="font-extrabold text-slate-850">{marketplaceCrops.length}</span> fresh harvest listings available directly from farmers.
+                    </p>
+                  </div>
+                  <div className="pt-2 border-t">
                     <button 
                       onClick={() => setActiveTab('find-crops')}
-                      className="text-xs text-emerald-650 font-bold hover:underline flex items-center gap-0.5 mt-1"
+                      className="w-full bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold py-2 px-4 rounded-xl text-xs transition border text-center"
                     >
-                      <span>Find Crops →</span>
+                      Browse Marketplace / சந்தை காண்க
                     </button>
-                  </div>
-                  <div className="w-16 h-8 text-emerald-500">
-                    <svg className="w-full h-full" viewBox="0 0 100 40">
-                      <path d="M5,15 L25,30 L45,10 L65,25 L85,5" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-                    </svg>
                   </div>
                 </div>
 
-                <div className="bg-white border rounded-xl p-4.5 shadow-sm flex items-center justify-between">
-                  <div className="space-y-1">
-                    <div className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Offers Placed / சலுகைகள்</div>
-                    <div className="text-2xl font-black text-slate-800">{myOffers.length}</div>
+                {/* Column 3: Bids status */}
+                <div className="bg-white border rounded-2xl p-6 shadow-sm flex flex-col justify-between space-y-4">
+                  <div className="space-y-2">
+                    <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl w-fit">
+                      <IndianRupee className="w-6 h-6" />
+                    </div>
+                    <h3 className="text-base font-bold text-slate-800">My Bids / என் சலுகைகள்</h3>
+                    <p className="text-xs text-slate-500 leading-normal">
+                      You have submitted <span className="font-extrabold text-slate-850">{myOffers.length}</span> price proposals to growers.
+                    </p>
+                  </div>
+                  <div className="pt-2 border-t">
                     <button 
                       onClick={() => setActiveTab('my-offers')}
-                      className="text-xs text-emerald-650 font-bold hover:underline flex items-center gap-0.5 mt-1"
+                      className="w-full bg-emerald-650 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-xl text-xs transition text-center shadow-xs"
                     >
-                      <span>My Bids →</span>
+                      Review My Bids / சலுகைகள் காண்க
                     </button>
                   </div>
-                  <div className="w-16 h-8 text-emerald-500">
-                    <svg className="w-full h-full" viewBox="0 0 100 40">
-                      <path d="M5,10 Q25,35 45,15 T85,30" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-              {/* Grid panels layout */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                
-                {/* Panel: My active requirements */}
-                <div className="bg-white border rounded-xl p-5 shadow-sm space-y-4">
-                  <div className="flex justify-between items-center border-b pb-2">
-                    <h3 className="text-base font-bold text-slate-800">My Procurement Demands / என் தேவைகள்</h3>
-                    <button 
-                      onClick={() => { setActiveTab('my-requirements'); setIsCreatingRequirement(true); }}
-                      className="text-xs text-emerald-755 font-black hover:underline"
-                    >
-                      + Add Demand
-                    </button>
-                  </div>
-                  {myRequirements.length === 0 ? (
-                    <div className="py-8 text-center text-slate-455 text-sm">
-                      <p>No procurement demands listed yet.</p>
-                      <button 
-                        onClick={() => { setActiveTab('my-requirements'); setIsCreatingRequirement(true); }}
-                        className="mt-2 text-emerald-600 font-bold text-xs bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg transition"
-                      >
-                        + Post Demand / தேவையைச் சேர்க்க
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="divide-y divide-slate-100 max-h-[250px] overflow-y-auto pr-1">
-                      {myRequirements.map(req => (
-                        <div key={req.id} className="py-3 flex justify-between items-center hover:bg-slate-50/50 transition px-1 rounded-lg">
-                          <div>
-                            <div className="font-bold text-slate-800 text-sm">🍉 {req.crop_name}</div>
-                            <div className="text-xs text-slate-500 mt-0.5">Need: {req.required_quantity} {req.unit} | Location: {req.preferred_location}</div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-emerald-750 font-black text-sm">Max Budget: ₹{req.max_price}/{req.unit}</span>
-                            <button 
-                              onClick={() => { handleSelectRequirement(req); setActiveTab('my-requirements'); setIsCreatingRequirement(false); }}
-                              className="bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 text-slate-700 text-xs px-2.5 py-1 rounded border font-semibold transition"
-                            >
-                              Find Suppliers
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
 
-                {/* Panel: Recent Farmer crops */}
-                <div className="bg-white border rounded-xl p-5 shadow-sm space-y-4">
-                  <div className="flex justify-between items-center border-b pb-2">
-                    <h3 className="text-base font-bold text-slate-800">Available Crops on Sale / விவசாய பயிர்கள்</h3>
-                    <button 
-                      onClick={() => setActiveTab('find-crops')}
-                      className="text-xs text-emerald-755 font-black hover:underline"
-                    >
-                      Browse Marketplace
-                    </button>
-                  </div>
-                  {marketplaceCrops.length === 0 ? (
-                    <p className="text-sm text-slate-400 italic py-4">No crops uploaded by local farmers currently.</p>
-                  ) : (
-                    <div className="divide-y divide-slate-100 max-h-[250px] overflow-y-auto pr-1">
-                      {marketplaceCrops.map(crop => (
-                        <div key={crop.id} className="py-3 flex justify-between items-center hover:bg-slate-50/50 transition px-1 rounded-lg">
-                          <div>
-                            <div className="font-bold text-slate-800 text-sm">🍅 {crop.crop_name} ({crop.variety})</div>
-                            <div className="text-xs text-slate-550 mt-0.5">Qty: {crop.quantity} {crop.unit} | Loc: {crop.location}</div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-emerald-700 font-bold text-sm">₹{crop.expected_price}/{crop.unit}</span>
-                            <button 
-                              onClick={() => { handleSelectCrop(crop); setActiveTab('find-crops'); }}
-                              className="bg-emerald-605 hover:bg-emerald-700 text-white text-xs px-2.5 py-1 rounded font-bold transition shadow-xs"
-                            >
-                              Send Offer
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-              </div>
-
-              {/* Panel: Offers Placed Status */}
-              <div className="bg-white border rounded-xl p-5 shadow-sm space-y-4">
-                <div className="flex justify-between items-center border-b pb-2">
-                  <h3 className="text-base font-bold text-slate-800">My Placed Offers Status / சலுகைகள்</h3>
-                  <button 
-                    onClick={() => setActiveTab('my-offers')}
-                    className="text-xs text-emerald-755 font-black hover:underline"
-                  >
-                    View All Bids
-                  </button>
-                </div>
-                {myOffers.length === 0 ? (
-                  <p className="text-sm text-slate-400 py-4 text-center">No offers placed yet. Visit the Find Crops tab to submit offers.</p>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {myOffers.slice(0, 3).map(offer => (
-                      <div key={offer.id} className="border border-slate-150 rounded-xl p-4 bg-white space-y-3 flex flex-col justify-between hover:shadow-md transition">
-                        <div>
-                          <div className="flex justify-between items-center border-b pb-2">
-                            <h4 className="font-bold text-slate-800 text-sm">🍅 {offer.crop.crop_name}</h4>
-                            <span className={`text-[9px] px-2 py-0.5 rounded font-black uppercase ${
-                              offer.status === 'accepted' ? 'bg-emerald-100 text-emerald-800' :
-                              offer.status === 'countered' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700'
-                            }`}>
-                              {offer.status}
-                            </span>
-                          </div>
-                          <div className="bg-slate-50 p-2.5 rounded-lg border text-xs text-slate-655 mt-3 space-y-1">
-                            <div>Farmer Expected: <span className="font-bold">₹{offer.crop.expected_price}/{offer.crop.unit}</span></div>
-                            <div>My Offered: <span className="font-bold text-emerald-700">₹{offer.offered_price_per_unit}/{offer.crop.unit}</span></div>
-                            {offer.status === 'countered' && <div className="text-amber-600 font-bold text-[9px] mt-1">⚠️ Farmer countered offer! Click negotiate to review.</div>}
-                          </div>
-                        </div>
-                        <button 
-                          onClick={() => { handleSelectOffer(offer); }}
-                          className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-lg text-xs transition"
-                        >
-                          Continue Negotiation
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
             </div>
           )}
