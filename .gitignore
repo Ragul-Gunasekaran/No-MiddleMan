@@ -22,3 +22,5 @@ backend/no_middle_man.db.bak
 .vscode/
 .DS_Store
 Thumbs.db
+
+.vercel

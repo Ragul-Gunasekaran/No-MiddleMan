@@ -5,7 +5,22 @@ import logging
 
 logger = logging.getLogger("database")
 
-DATABASE_URL = "sqlite:///./no_middle_man.db"
+import os
+import shutil
+
+# Detect Vercel or serverless read-only filesystem environments
+if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+    sqlite_src = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "no_middle_man.db"))
+    sqlite_dest = "/tmp/no_middle_man.db"
+    if not os.path.exists(sqlite_dest):
+        if os.path.exists(sqlite_src):
+            try:
+                shutil.copy2(sqlite_src, sqlite_dest)
+            except Exception:
+                pass
+    DATABASE_URL = f"sqlite:///{sqlite_dest}"
+else:
+    DATABASE_URL = "sqlite:///./no_middle_man.db"
 
 engine = create_engine(
     DATABASE_URL, connect_args={"check_same_thread": False}
