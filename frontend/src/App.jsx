@@ -31,6 +31,11 @@ export default function App() {
   // Demo State
   const [users, setUsers] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
+  const [authMode, setAuthMode] = useState('login');
+  const [loginForm, setLoginForm] = useState({ phone: '', password: '' });
+  const [regForm, setRegForm] = useState({ name: '', phone: '', location: '', password: '', role: 'FARMER' });
+  const [authError, setAuthError] = useState('');
+  const [authSuccess, setAuthSuccess] = useState('');
   
   // App views: 'farmer', 'buyer', 'marketplace'
   const [activeTab, setActiveTab] = useState('farmer'); 
@@ -136,13 +141,87 @@ export default function App() {
     try {
       const data = await apiFetch('/api/users');
       setUsers(data);
-      if (data.length > 0 && !currentUser) {
-        // Log in Rajesh by default if seeded
-        const rajesh = data.find(u => u.phone === '9876543210') || data[0];
-        setCurrentUser(rajesh);
-      }
     } catch (e) {
       console.error("Error loading users:", e);
+    }
+  };
+
+  const handleRegisterSubmit = async (e) => {
+    e.preventDefault();
+    setAuthError('');
+    setAuthSuccess('');
+    
+    if (!regForm.name.trim()) {
+      setAuthError('Name cannot be empty / பெயர் காலியாக இருக்கக்கூடாது');
+      return;
+    }
+    if (!regForm.phone.trim() || !/^\d{10}$/.test(regForm.phone.trim())) {
+      setAuthError('Phone number must be a valid 10-digit number / தொலைபேசி எண் 10 இலக்கங்களாக இருக்க வேண்டும்');
+      return;
+    }
+    if (!regForm.location.trim()) {
+      setAuthError('Location cannot be empty / இடம் காலியாக இருக்கக்கூடாது');
+      return;
+    }
+    if (regForm.password.length < 6) {
+      setAuthError('Password must be at least 6 characters / கடவுச்சொல் குறைந்தபட்சம் 6 எழுத்துகள் இருக்க வேண்டும்');
+      return;
+    }
+
+    try {
+      const newUser = await apiFetch('/api/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: regForm.name.trim(),
+          phone: regForm.phone.trim(),
+          role: regForm.role,
+          location: regForm.location.trim(),
+          password: regForm.password,
+          is_verified: false
+        })
+      });
+      
+      setAuthSuccess('Account created successfully! Logging you in... / கணக்கு வெற்றிகரமாக உருவாக்கப்பட்டது!');
+      await loadUsers();
+      setTimeout(() => {
+        setCurrentUser(newUser);
+        setAuthSuccess('');
+      }, 1500);
+    } catch (err) {
+      setAuthError(err.message || 'Registration failed');
+    }
+  };
+
+  const handleLoginSubmit = async (e) => {
+    e.preventDefault();
+    setAuthError('');
+    setAuthSuccess('');
+    
+    if (!loginForm.phone.trim()) {
+      setAuthError('Phone number required / தொலைபேசி எண் தேவை');
+      return;
+    }
+    if (!loginForm.password) {
+      setAuthError('Password required / கடவுச்சொல் தேவை');
+      return;
+    }
+
+    try {
+      const loggedUser = await apiFetch('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({
+          phone: loginForm.phone.trim(),
+          password: loginForm.password
+        })
+      });
+      
+      setAuthSuccess('Login successful! Welcome back... / உள்நுழைவு வெற்றிகரமாக முடிந்தது!');
+      setTimeout(() => {
+        setCurrentUser(loggedUser);
+        setAuthSuccess('');
+      }, 1000);
+    } catch (err) {
+      setAuthError(err.message || 'Invalid phone number or password / தவறான தொலைபேசி எண் அல்லது கடவுச்சொல்');
     }
   };
 
@@ -527,6 +606,191 @@ export default function App() {
     );
   };
 
+  if (!currentUser) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans p-6 w-full">
+        <div className="bg-white border rounded-2xl p-8 max-w-md w-full shadow-md space-y-6">
+          <div className="text-center space-y-2">
+            <div className="flex justify-center">
+              <Sprout className="w-10 h-10 text-emerald-600 animate-bounce" />
+            </div>
+            <h1 className="text-2xl font-black text-slate-800 tracking-wider">NO MIDDLE MAN</h1>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Direct Farmer ↔ Buyer Marketplace</p>
+          </div>
+
+          {authError && (
+            <div className="bg-rose-50 border border-rose-200 text-rose-800 text-xs px-3.5 py-2.5 rounded-xl font-semibold flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-rose-500" />
+              <span>{authError}</span>
+            </div>
+          )}
+
+          {authSuccess && (
+            <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs px-3.5 py-2.5 rounded-xl font-bold flex items-center gap-2">
+              <Check className="w-4 h-4 text-emerald-500" />
+              <span>{authSuccess}</span>
+            </div>
+          )}
+
+          {authMode === 'login' ? (
+            <form onSubmit={handleLoginSubmit} className="space-y-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-500 uppercase">Phone Number / தொலைபேசி எண்</label>
+                <input 
+                  type="text" 
+                  value={loginForm.phone}
+                  onChange={(e) => setLoginForm({ ...loginForm, phone: e.target.value })}
+                  placeholder="e.g. 9876543210"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-500 uppercase">Password / கடவுச்சொல்</label>
+                <input 
+                  type="password" 
+                  value={loginForm.password}
+                  onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                  placeholder="••••••"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition"
+                />
+              </div>
+
+              <button 
+                type="submit"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 rounded-xl text-xs transition uppercase shadow-md tracking-wider"
+              >
+                Login / உள்நுழை
+              </button>
+
+              <div className="text-center pt-2 text-xs text-slate-500">
+                New to NO MIDDLE MAN?{' '}
+                <button 
+                  type="button"
+                  onClick={() => { setAuthMode('register'); setAuthError(''); }}
+                  className="text-emerald-600 font-bold hover:underline"
+                >
+                  Create Account / கணக்கு உருவாக்க
+                </button>
+              </div>
+
+              {/* Demo Accounts List */}
+              <div className="border-t pt-4 mt-2 space-y-3">
+                <label className="text-[9px] font-bold text-slate-400 uppercase block text-center tracking-wider">Demo Accounts (For Instant Testing)</label>
+                <div className="grid grid-cols-1 gap-2">
+                  {users.filter(u => ['9876543210', '9876543211', '9876543212'].includes(u.phone)).map(demoUser => (
+                    <button
+                      key={demoUser.id}
+                      type="button"
+                      onClick={() => {
+                        setAuthSuccess(`Logging in as ${demoUser.name}...`);
+                        setTimeout(() => {
+                          setCurrentUser(demoUser);
+                          setAuthSuccess('');
+                        }, 500);
+                      }}
+                      className="bg-slate-50 hover:bg-emerald-50 hover:border-emerald-200 border text-left p-3 rounded-xl transition flex justify-between items-center group animate-none"
+                    >
+                      <div>
+                        <div className="text-xs font-bold text-slate-800 group-hover:text-emerald-800">{demoUser.name}</div>
+                        <div className="text-[9px] text-slate-400 uppercase font-medium">{demoUser.role.toLowerCase()} • {demoUser.location}</div>
+                      </div>
+                      <span className="text-[10px] text-emerald-600 font-bold opacity-0 group-hover:opacity-100 transition">Log In →</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handleRegisterSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-slate-500 uppercase block">I am a / நான் ஒரு</label>
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setRegForm({ ...regForm, role: 'FARMER' })}
+                    className={`py-3.5 px-4 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-2 ${regForm.role === 'FARMER' ? 'bg-emerald-50 border-emerald-400 text-emerald-800 ring-2 ring-emerald-500/20' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'}`}
+                  >
+                    <span>🌾 Farmer / விவசாயி</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRegForm({ ...regForm, role: 'BUYER' })}
+                    className={`py-3.5 px-4 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-2 ${regForm.role === 'BUYER' ? 'bg-emerald-50 border-emerald-400 text-emerald-800 ring-2 ring-emerald-500/20' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'}`}
+                  >
+                    <span>🏢 Buyer / வாங்குபவர்</span>
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-500 uppercase">Full Name / முழு பெயர்</label>
+                <input 
+                  type="text" 
+                  value={regForm.name}
+                  onChange={(e) => setRegForm({ ...regForm, name: e.target.value })}
+                  placeholder="e.g. Ramesh Patil"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-500 uppercase">Phone Number / தொலைபேசி எண்</label>
+                <input 
+                  type="text" 
+                  value={regForm.phone}
+                  onChange={(e) => setRegForm({ ...regForm, phone: e.target.value })}
+                  placeholder="10-digit number"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-500 uppercase">Location / இடம்</label>
+                <input 
+                  type="text" 
+                  value={regForm.location}
+                  onChange={(e) => setRegForm({ ...regForm, location: e.target.value })}
+                  placeholder="e.g. Nashik, Maharashtra"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold text-slate-500 uppercase">Password / கடவுச்சொல்</label>
+                <input 
+                  type="password" 
+                  value={regForm.password}
+                  onChange={(e) => setRegForm({ ...regForm, password: e.target.value })}
+                  placeholder="At least 6 characters"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition"
+                />
+              </div>
+
+              <button 
+                type="submit"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 rounded-xl text-xs transition uppercase shadow-md tracking-wider"
+              >
+                Create Account / கணக்கு உருவாக்க
+              </button>
+
+              <div className="text-center pt-2 text-xs text-slate-500">
+                Already have an account?{' '}
+                <button 
+                  type="button"
+                  onClick={() => { setAuthMode('login'); setAuthError(''); }}
+                  className="text-emerald-600 font-bold hover:underline"
+                >
+                  Login / உள்நுழை
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans text-slate-800 w-full">
       
@@ -559,16 +823,24 @@ export default function App() {
           </div>
           
           {/* User Switcher inline */}
-          <div className="pt-2 border-t border-slate-700/60">
-            <label className="block text-[8px] uppercase font-bold text-slate-500 mb-1">Select Profile / பயனர் தேர்வு</label>
+          <div className="pt-2 border-t border-slate-700/60 flex flex-col gap-2">
+            <div className="flex justify-between items-center">
+              <label className="block text-[8px] uppercase font-bold text-slate-500">Demo Mode Switch / டெமோ தேர்வு</label>
+              <button 
+                onClick={() => setCurrentUser(null)}
+                className="text-[9px] text-rose-400 hover:text-rose-350 hover:underline font-bold font-sans"
+              >
+                Logout / வெளியேறு
+              </button>
+            </div>
             <select 
               value={currentUser?.id || ''} 
               onChange={(e) => handleUserSwitch(e.target.value)}
-              className="w-full bg-slate-955 text-slate-300 p-1.5 rounded-md text-[11px] outline-none border border-slate-700 cursor-pointer font-medium hover:border-slate-600 transition bg-slate-900"
+              className="w-full bg-slate-900 text-slate-300 p-1.5 rounded-md text-[11px] outline-none border border-slate-700 cursor-pointer font-medium hover:border-slate-600 transition"
             >
               {users.map(u => (
                 <option key={u.id} value={u.id} className="bg-slate-900">
-                  {u.name} {u.is_verified ? '✓' : ''} ({u.role})
+                  {u.name} {u.is_verified ? '✓' : ''} ({u.role.toLowerCase()})
                 </option>
               ))}
             </select>
