@@ -102,17 +102,25 @@ export default function App() {
     message: ''
   });
 
+  // Auth & Loading States
+  const [isAppLoading, setIsAppLoading] = useState(true);
+
   // Fetch helper with User Auth Header
   const apiFetch = async (url, options = {}) => {
     const headers = {
       'Content-Type': 'application/json',
       ...options.headers,
     };
-    if (currentUser) {
-      headers['X-User-Id'] = currentUser.id.toString();
+    const token = localStorage.getItem('token');
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
     }
     const response = await fetch(url, { ...options, headers });
     if (!response.ok) {
+      if (response.status === 401) {
+        localStorage.removeItem('token');
+        setCurrentUser(null);
+      }
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.detail || 'API request failed');
     }
@@ -121,8 +129,20 @@ export default function App() {
 
   // Initial Boot
   useEffect(() => {
-    loadUsers();
-    loadMarketPrices();
+    const initAuth = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const user = await apiFetch('/api/auth/me');
+          setCurrentUser(user);
+        } catch (e) {
+          localStorage.removeItem('token');
+        }
+      }
+      setIsAppLoading(false);
+      loadMarketPrices();
+    };
+    initAuth();
   }, []);
 
   // Reload data when User changes
@@ -138,20 +158,11 @@ export default function App() {
     }
   }, [currentUser]);
 
-  const loadUsers = async () => {
-    try {
-      const data = await apiFetch('/api/users');
-      setUsers(data);
-    } catch (e) {
-      console.error("Error loading users:", e);
-    }
-  };
-
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     setAuthError('');
     setAuthSuccess('');
-    
+
     if (!regForm.name.trim()) {
       setAuthError('Name cannot be empty / பெயர் காலியாக இருக்கக்கூடாது');
       return;
@@ -170,7 +181,7 @@ export default function App() {
     }
 
     try {
-      const newUser = await apiFetch('/api/auth/register', {
+      const authRes = await apiFetch('/api/auth/register', {
         method: 'POST',
         body: JSON.stringify({
           name: regForm.name.trim(),
@@ -182,12 +193,12 @@ export default function App() {
         })
       });
       
+      localStorage.setItem('token', authRes.access_token);
       setAuthSuccess('Account created successfully! Logging you in... / கணக்கு வெற்றிகரமாக உருவாக்கப்பட்டது!');
-      await loadUsers();
       setTimeout(() => {
-        setCurrentUser(newUser);
+        setCurrentUser(authRes.user);
         setAuthSuccess('');
-      }, 1500);
+      }, 1000);
     } catch (err) {
       setAuthError(err.message || 'Registration failed');
     }
@@ -208,7 +219,7 @@ export default function App() {
     }
 
     try {
-      const loggedUser = await apiFetch('/api/auth/login', {
+      const authRes = await apiFetch('/api/auth/login', {
         method: 'POST',
         body: JSON.stringify({
           phone: loginForm.phone.trim(),
@@ -216,9 +227,10 @@ export default function App() {
         })
       });
       
+      localStorage.setItem('token', authRes.access_token);
       setAuthSuccess('Login successful! Welcome back... / உள்நுழைவு வெற்றிகரமாக முடிந்தது!');
       setTimeout(() => {
-        setCurrentUser(loggedUser);
+        setCurrentUser(authRes.user);
         setAuthSuccess('');
       }, 1000);
     } catch (err) {
@@ -360,17 +372,15 @@ export default function App() {
   };
 
   // Auth Operations
-  const handleUserSwitch = (userId) => {
-    const user = users.find(u => u.id === parseInt(userId));
-    if (user) {
-      setCurrentUser(user);
-      setSelectedCrop(null);
-      setSelectedRequirement(null);
-      setSelectedOffer(null);
-      setCropMatches([]);
-      setRequirementMatches([]);
-      setCropOffers([]);
-    }
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setCurrentUser(null);
+    setSelectedCrop(null);
+    setSelectedRequirement(null);
+    setSelectedOffer(null);
+    setCropMatches([]);
+    setRequirementMatches([]);
+    setCropOffers([]);
   };
 
   const handleRegister = async (e) => {
@@ -611,6 +621,19 @@ export default function App() {
     );
   };
 
+  if (isAppLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans p-6 w-full">
+        <div className="text-center space-y-4">
+          <div className="flex justify-center">
+            <Sprout className="w-12 h-12 text-emerald-600 animate-spin" />
+          </div>
+          <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">Loading your account...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!currentUser) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans p-6 w-full">
@@ -679,32 +702,7 @@ export default function App() {
                 </button>
               </div>
 
-              {/* Demo Accounts List */}
-              <div className="border-t pt-4 mt-2 space-y-3">
-                <label className="text-[9px] font-bold text-slate-400 uppercase block text-center tracking-wider">Demo Accounts (For Instant Testing)</label>
-                <div className="grid grid-cols-1 gap-2">
-                  {users.filter(u => ['9876543210', '9876543211', '9876543212'].includes(u.phone)).map(demoUser => (
-                    <button
-                      key={demoUser.id}
-                      type="button"
-                      onClick={() => {
-                        setAuthSuccess(`Logging in as ${demoUser.name}...`);
-                        setTimeout(() => {
-                          setCurrentUser(demoUser);
-                          setAuthSuccess('');
-                        }, 500);
-                      }}
-                      className="bg-slate-50 hover:bg-emerald-50 hover:border-emerald-200 border text-left p-3 rounded-xl transition flex justify-between items-center group animate-none"
-                    >
-                      <div>
-                        <div className="text-xs font-bold text-slate-800 group-hover:text-emerald-800">{demoUser.name}</div>
-                        <div className="text-[9px] text-slate-400 uppercase font-medium">{demoUser.role.toLowerCase()} • {demoUser.location}</div>
-                      </div>
-                      <span className="text-[10px] text-emerald-600 font-bold opacity-0 group-hover:opacity-100 transition">Log In →</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+
             </form>
           ) : (
             <form onSubmit={handleRegisterSubmit} className="space-y-4">
@@ -827,28 +825,10 @@ export default function App() {
             </div>
           </div>
           
-          {/* User Switcher inline */}
+          {/* Logout Action */}
+          {/* Logout Action */}
           <div className="pt-2 border-t border-slate-700/60 flex flex-col gap-2">
-            <div className="flex justify-between items-center">
-              <label className="block text-[8px] uppercase font-bold text-slate-500">Demo Mode Switch / டெமோ தேர்வு</label>
-              <button 
-                onClick={() => setCurrentUser(null)}
-                className="text-[9px] text-rose-400 hover:text-rose-350 hover:underline font-bold font-sans"
-              >
-                Logout / வெளியேறு
-              </button>
-            </div>
-            <select 
-              value={currentUser?.id || ''} 
-              onChange={(e) => handleUserSwitch(e.target.value)}
-              className="w-full bg-slate-900 text-slate-300 p-1.5 rounded-md text-[11px] outline-none border border-slate-700 cursor-pointer font-medium hover:border-slate-600 transition"
-            >
-              {users.map(u => (
-                <option key={u.id} value={u.id} className="bg-slate-900">
-                  {u.name} {u.is_verified ? '✓' : ''} ({u.role.toLowerCase()})
-                </option>
-              ))}
-            </select>
+            <button onClick={handleLogout} className="w-full py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs rounded-lg font-bold transition shadow-sm">Logout</button>
           </div>
         </div>
 
@@ -1019,21 +999,7 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-4 text-xs font-semibold text-slate-600">
-            {/* Mobile/Tablet user profile switcher (only when sidebar is hidden) */}
-            <div className="lg:hidden flex items-center gap-1 bg-slate-100 hover:bg-slate-200 border text-slate-700 px-2 py-1 rounded-md transition">
-              <select 
-                value={currentUser?.id || ''} 
-                onChange={(e) => handleUserSwitch(e.target.value)}
-                className="bg-transparent text-[11px] outline-none cursor-pointer font-bold"
-              >
-                {users.map(u => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} ({u.role.toLowerCase()})
-                  </option>
-                ))}
-              </select>
-            </div>
-
+            <button onClick={handleLogout} className="lg:hidden text-rose-500 font-bold hover:underline">Logout</button>
             <div className="relative p-2 text-slate-400 hover:text-slate-600 cursor-pointer transition hover:bg-slate-50 rounded-full">
               <Bell className="w-4 h-4" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-emerald-500 rounded-full"></span>

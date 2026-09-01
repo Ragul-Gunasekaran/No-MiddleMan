@@ -1,13 +1,17 @@
-from fastapi import FastAPI, HTTPException, Depends, Header, status
+from fastapi import FastAPI, HTTPException, Depends, Header, status, Request
+from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any, Optional
 import logging
+import os
+from datetime import datetime, timedelta
+import jwt
 
 from app.database import get_db, init_db
 from app.models import (
     User, Crop, BuyerRequirement, Offer, Negotiation,
-    UserRegister, UserLogin, UserResponse,
+    UserRegister, UserLogin, UserResponse, AuthResponse,
     CropCreate, CropResponse,
     RequirementCreate, RequirementResponse,
     OfferCreate, OfferResponse, OfferUpdateStatus,
@@ -41,6 +45,41 @@ app.add_middleware(
 # Password hashing configuration
 pwd_context = CryptContext(schemes=["sha256_crypt"], deprecated="auto")
 
+# JWT Configuration
+JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "development_secret_key_change_in_production")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7 # 7 days
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
+
+def create_access_token(data: dict):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, JWT_SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+# Secure JWT Authentication Dependency
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[ALGORITHM])
+        user_id_str: str = payload.get("sub")
+        if user_id_str is None:
+            raise credentials_exception
+        user_id = int(user_id_str)
+    except (jwt.PyJWTError, ValueError):
+        raise credentials_exception
+        
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise credentials_exception
+    return user
+
 # Mock market reference prices for key crops (Phase 4 Market Support)
 MOCK_MARKET_PRICES = {
     "tomato": {"name": "Tomato", "reference_price": 22.0, "unit": "kg"},
@@ -50,27 +89,12 @@ MOCK_MARKET_PRICES = {
     "wheat": {"name": "Wheat", "reference_price": 28.0, "unit": "kg"},
 }
 
-# Helper to verify current user using X-User-Id header (for demo simplicity)
-def get_current_user(x_user_id: Optional[int] = Header(None), db: Session = Depends(get_db)) -> User:
-    if not x_user_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Header X-User-Id is missing. Sign in or switch user."
-        )
-    user = db.query(User).filter(User.id == x_user_id).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Session User not found."
-        )
-    return user
-
 
 # ==========================================
 # Authentication Endpoints
 # ==========================================
 
-@app.post("/api/auth/register", response_model=UserResponse)
+@app.post("/api/auth/register", response_model=AuthResponse)
 def register(req: UserRegister, db: Session = Depends(get_db)):
     # Check if phone exists
     existing_user = db.query(User).filter(User.phone == req.phone).first()
@@ -82,19 +106,24 @@ def register(req: UserRegister, db: Session = Depends(get_db)):
         role=req.role.upper(),
         phone=req.phone,
         password_hash=pwd_context.hash(req.password),
-        location=req.location
+        location=req.location,
+        is_verified=False
     )
     db.add(user)
     db.commit()
     db.refresh(user)
-    return user
+    
+    access_token = create_access_token(data={"sub": str(user.id)})
+    return {"access_token": access_token, "token_type": "bearer", "user": user}
 
-@app.post("/api/auth/login", response_model=UserResponse)
+@app.post("/api/auth/login", response_model=AuthResponse)
 def login(req: UserLogin, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.phone == req.phone).first()
     if not user or not pwd_context.verify(req.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid phone or password")
-    return user
+        
+    access_token = create_access_token(data={"sub": str(user.id)})
+    return {"access_token": access_token, "token_type": "bearer", "user": user}
 
 @app.get("/api/auth/me", response_model=UserResponse)
 def get_me(current_user: User = Depends(get_current_user)):
@@ -215,6 +244,9 @@ def get_crop_matches(crop_id: int, current_user: User = Depends(get_current_user
     if not crop:
         raise HTTPException(status_code=404, detail="Crop not found")
         
+    if crop.farmer_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Unauthorized to view matches for this crop")
+        
     matches = find_matches_for_crop(db, crop)
     
     # Map into a clean client-friendly format
@@ -244,6 +276,9 @@ def get_requirement_matches(req_id: int, current_user: User = Depends(get_curren
     req = db.query(BuyerRequirement).filter(BuyerRequirement.id == req_id).first()
     if not req:
         raise HTTPException(status_code=404, detail="Requirement not found")
+        
+    if req.buyer_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Unauthorized to view matches for this requirement")
         
     from app.matching import find_matches_for_requirement
     matches = find_matches_for_requirement(db, req)

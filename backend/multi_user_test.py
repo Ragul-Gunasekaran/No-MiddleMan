@@ -34,8 +34,9 @@ def run_test():
             print(f"FAIL: Login failed for {u['name']}: {login_resp.text}")
             sys.exit(1)
         
-        user_id = login_resp.json()["id"]
-        sessions[u["name"]] = {"id": user_id, "headers": {"X-User-Id": str(user_id)}}
+        auth_res = login_resp.json()
+        user_id = auth_res["user"]["id"]
+        sessions[u["name"]] = {"id": user_id, "headers": {"Authorization": f"Bearer {auth_res['access_token']}"}}
         print(f"OK: Logged in {u['name']} (ID: {user_id})")
 
     # 2. Upload crops

@@ -14,7 +14,8 @@ def test_regression_journey():
         "password": "password123"
     })
     assert r_login.status_code == 200, "Rajesh login failed"
-    rajesh = r_login.json()
+    rajesh_auth = r_login.json()
+    rajesh = rajesh_auth['user']
     print(f"Rajesh Logged In (ID: {rajesh['id']})")
     
     b_login = requests.post(f"{BASE_URL}/api/auth/login", json={
@@ -22,13 +23,14 @@ def test_regression_journey():
         "password": "password123"
     })
     assert b_login.status_code == 200, "BigMart login failed"
-    bigmart = b_login.json()
+    bigmart_auth = b_login.json()
+    bigmart = bigmart_auth['user']
     print(f"BigMart Logged In (ID: {bigmart['id']}, Verified: {bigmart['is_verified']})")
     assert bigmart['is_verified'] is True, "Expected BigMart to be verified"
 
     # Headers for authentication
-    rajesh_headers = {"X-User-Id": str(rajesh['id'])}
-    bigmart_headers = {"X-User-Id": str(bigmart['id'])}
+    rajesh_headers = {"Authorization": f"Bearer {rajesh_auth['access_token']}"}
+    bigmart_headers = {"Authorization": f"Bearer {bigmart_auth['access_token']}"}
     
     # 2. Farmer Rajesh uploads crop: Tomato, 5 tons, Nashik
     print("\n2. Rajesh uploads Tomato crop listing...")

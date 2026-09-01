@@ -115,6 +115,12 @@ class UserResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class AuthResponse(BaseModel):
+    access_token: str
+    token_type: str
+    user: UserResponse
+
+
 # Crops
 class CropCreate(BaseModel):
     crop_name: str
