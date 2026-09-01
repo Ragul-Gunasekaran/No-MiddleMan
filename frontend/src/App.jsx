@@ -28,8 +28,6 @@ import {
 } from 'lucide-react';
 
 export default function App() {
-  // Demo State
-  const [users, setUsers] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
   const [authMode, setAuthMode] = useState('login');
   const [loginForm, setLoginForm] = useState({ phone: '', password: '' });
@@ -77,17 +75,6 @@ export default function App() {
     max_price: '25',
     max_distance_km: '150'
   });
-
-  const [registerForm, setRegisterForm] = useState({
-    name: '',
-    phone: '',
-    role: 'FARMER',
-    location: '',
-    password: 'password123'
-  });
-
-  const [showRegister, setShowRegister] = useState(false);
-  
   // Negotiation States
   const [selectedOffer, setSelectedOffer] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
@@ -399,24 +386,7 @@ export default function App() {
     setRequirementMatches([]);
     setCropOffers([]);
   };
-
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    try {
-      const newUser = await apiFetch('/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify(registerForm)
-      });
-      setShowRegister(false);
-      setRegisterForm({ name: '', phone: '', role: 'FARMER', location: '', password: 'password123' });
-      await loadUsers();
-      setCurrentUser(newUser);
-    } catch (err) {
-      alert("Registration failed: " + err.message);
-    }
-  };
-
-  // Farmer Actions
+// Farmer Actions
   const handleUploadCrop = async (e) => {
     e.preventDefault();
     try {
@@ -940,62 +910,7 @@ export default function App() {
           )}
         </nav>
 
-        {/* Demo Register widget */}
-        <div className="p-3.5 mx-3 mb-4 bg-slate-800/40 rounded-xl border border-slate-700/30 text-[11px] space-y-2">
-          <div className="flex justify-between items-center text-slate-400 font-bold uppercase tracking-wider text-[9px]">
-            <span>New Demo User</span>
-            <button 
-              onClick={() => setShowRegister(!showRegister)}
-              className="text-emerald-400 hover:underline hover:text-emerald-300 font-semibold"
-            >
-              {showRegister ? 'Cancel' : '+ Add'}
-            </button>
-          </div>
-          {showRegister && (
-            <form onSubmit={handleRegister} className="space-y-1.5 text-slate-800">
-              <input 
-                type="text" 
-                placeholder="Name" 
-                required
-                className="w-full px-2 py-1 bg-slate-900 border border-slate-700 rounded text-slate-200 text-xs"
-                value={registerForm.name}
-                onChange={(e) => setRegisterForm({...registerForm, name: e.target.value})}
-              />
-              <div className="grid grid-cols-2 gap-1">
-                <input 
-                  type="text" 
-                  placeholder="Phone" 
-                  required
-                  className="w-full px-2 py-1 bg-slate-900 border border-slate-700 rounded text-slate-200 text-xs"
-                  value={registerForm.phone}
-                  onChange={(e) => setRegisterForm({...registerForm, phone: e.target.value})}
-                />
-                <input 
-                  type="text" 
-                  placeholder="Location" 
-                  required
-                  className="w-full px-2 py-1 bg-slate-900 border border-slate-700 rounded text-slate-200 text-xs"
-                  value={registerForm.location}
-                  onChange={(e) => setRegisterForm({...registerForm, location: e.target.value})}
-                />
-              </div>
-              <div className="flex gap-2 items-center justify-between text-slate-300 text-xs">
-                <select 
-                  value={registerForm.role}
-                  className="px-1 py-0.5 bg-slate-900 border border-slate-700 rounded text-slate-300 text-xs"
-                  onChange={(e) => setRegisterForm({...registerForm, role: e.target.value})}
-                >
-                  <option value="FARMER">Farmer</option>
-                  <option value="BUYER">Buyer</option>
-                </select>
-                <button type="submit" className="bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 rounded font-bold transition text-xs">
-                  Save
-                </button>
-              </div>
-            </form>
-          )}
-        </div>
-      </aside>
+        </aside>
 
       {/* Main Content Area - Full width on mobile/tablet, offset by sidebar width on desktop */}
       <div className="flex-1 pl-0 lg:pl-64 flex flex-col min-h-screen w-full">
@@ -1612,7 +1527,7 @@ export default function App() {
                         const expectedPrice = offer.crop.expected_price;
                         const offeredPrice = offer.offered_price_per_unit;
                         const cropKey = (offer.crop.crop_name || '').toLowerCase().trim();
-                        const marketPrice = marketPrices[cropKey] || 22.0;
+                        const marketPrice = marketPrices[cropKey] ? marketPrices[cropKey].reference_price : 22.0;
                         
                         const isBelowMarket = offeredPrice < marketPrice;
                         
