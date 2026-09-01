@@ -94,24 +94,35 @@ def save_db_to_cloud():
             logger.error(f"Error saving database to GitHub Gist: {e}")
     return False
 
-# Detect Vercel or serverless read-only filesystem environments
-if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
-    sqlite_dest = "/tmp/no_middle_man.db"
-    # Ensure it's populated on startup
-    if not os.path.exists(sqlite_dest):
-        load_db_from_cloud()
-    DATABASE_URL = f"sqlite:///{sqlite_dest}"
-else:
-    DATABASE_URL = "sqlite:///./no_middle_man.db"
+# Use Postgres/MySQL if DATABASE_URL is provided in environment variables
+env_db_url = os.environ.get("DATABASE_URL")
 
-engine = create_engine(
-    DATABASE_URL, connect_args={"check_same_thread": False}
-)
+if env_db_url:
+    # SQLAlchemy 1.4+ requires postgresql:// instead of postgres://
+    if env_db_url.startswith("postgres://"):
+        env_db_url = env_db_url.replace("postgres://", "postgresql://", 1)
+    DATABASE_URL = env_db_url
+    engine = create_engine(DATABASE_URL)
+else:
+    # Fallback to local/ephemeral SQLite
+    if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+        sqlite_dest = "/tmp/no_middle_man.db"
+        if not os.path.exists(sqlite_dest):
+            load_db_from_cloud()
+        DATABASE_URL = f"sqlite:///{sqlite_dest}"
+    else:
+        DATABASE_URL = "sqlite:///./no_middle_man.db"
+    
+    engine = create_engine(
+        DATABASE_URL, connect_args={"check_same_thread": False}
+    )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 def get_db():
-    is_serverless = os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME")
+    env_db_url = os.environ.get("DATABASE_URL")
+    is_serverless = not env_db_url and (os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+    
     if is_serverless:
         load_db_from_cloud()
     
