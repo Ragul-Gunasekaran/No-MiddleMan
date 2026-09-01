@@ -104,6 +104,7 @@ export default function App() {
 
   // Auth & Loading States
   const [isAppLoading, setIsAppLoading] = useState(true);
+  const [apiError, setApiError] = useState(null);
 
   // Fetch helper with User Auth Header
   const API_BASE_URL = import.meta.env.VITE_API_URL || '';
@@ -272,6 +273,7 @@ export default function App() {
       }
     } catch (e) {
       console.error(e);
+      setApiError(e.message || 'Unable to load data');
     }
   };
 
@@ -290,6 +292,7 @@ export default function App() {
       }
     } catch (e) {
       console.error(e);
+      setApiError(e.message || 'Unable to load data');
     }
   };
 
@@ -302,6 +305,7 @@ export default function App() {
       setCropOffers(offers);
     } catch (e) {
       console.error(e);
+      setApiError(e.message || 'Unable to load data');
     }
   };
 
@@ -312,6 +316,7 @@ export default function App() {
       setRequirementMatches(matches);
     } catch (e) {
       console.error(e);
+      setApiError(e.message || 'Unable to load data');
     }
   };
 
@@ -364,10 +369,12 @@ export default function App() {
       setChatMessages(thread);
     } catch (e) {
       console.error(e);
+      setApiError(e.message || 'Unable to load data');
     }
   };
 
   const handleRefresh = () => {
+    setApiError(null);
     loadMarketPrices();
     if (currentUser) {
       if (currentUser.role === 'FARMER') {
@@ -993,6 +1000,17 @@ export default function App() {
       {/* Main Content Area - Full width on mobile/tablet, offset by sidebar width on desktop */}
       <div className="flex-1 pl-0 lg:pl-64 flex flex-col min-h-screen w-full">
         
+                {/* Error Boundary */}
+        {apiError && (
+          <div className="m-6 p-6 bg-rose-50 border border-rose-200 rounded-xl text-center">
+            <h3 className="text-lg font-bold text-rose-800 mb-2">Unable to load data</h3>
+            <p className="text-sm text-rose-600 mb-4">{apiError}</p>
+            <button onClick={handleRefresh} className="px-4 py-2 bg-rose-600 text-white rounded font-bold hover:bg-rose-500 transition">
+              Retry
+            </button>
+          </div>
+        )}
+
         {/* Top Header */}
         <header className="bg-white border-b h-16 sticky top-0 z-20 flex items-center justify-between px-6 shadow-sm">
           <div>
