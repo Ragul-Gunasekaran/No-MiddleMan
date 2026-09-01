@@ -106,6 +106,7 @@ export default function App() {
   const [isAppLoading, setIsAppLoading] = useState(true);
 
   // Fetch helper with User Auth Header
+  const API_BASE_URL = import.meta.env.VITE_API_URL || '';
   const apiFetch = async (url, options = {}) => {
     const headers = {
       'Content-Type': 'application/json',
@@ -115,14 +116,23 @@ export default function App() {
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
-    const response = await fetch(url, { ...options, headers });
+    const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`;
+    const response = await fetch(fullUrl, { ...options, headers });
     if (!response.ok) {
       if (response.status === 401) {
         localStorage.removeItem('token');
         setCurrentUser(null);
       }
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.detail || 'API request failed');
+      const errorText = await response.text().catch(() => '');
+      let errorDetail = 'API request failed';
+      try {
+        const json = JSON.parse(errorText);
+        errorDetail = json.detail || JSON.stringify(json);
+      } catch (e) {
+        errorDetail = errorText || 'Empty response';
+      }
+      const method = options.method || 'GET';
+      throw new Error(`API ERROR\n${method} ${fullUrl}\nStatus: ${response.status}\nResponse: ${errorDetail}`);
     }
     return response.json();
   };
