@@ -521,7 +521,7 @@ export default function App() {
 
   // Helper unit conversions for display reference
   const renderPriceInfo = (offer, crop) => {
-    const key = crop.crop_name.toLowerCase().strip ? crop.crop_name.toLowerCase().trim() : crop.crop_name.toLowerCase();
+    const key = (crop.crop_name || '').toLowerCase().strip ? (crop.crop_name || '').toLowerCase().trim() : (crop.crop_name || '').toLowerCase();
     const referenceObj = marketPrices[key];
     const refPrice = referenceObj ? referenceObj.reference_price : 20.0;
     
@@ -1090,7 +1090,7 @@ export default function App() {
 
           {/* 1. FARMER DASHBOARD TAB */}
           {currentUser?.role === 'FARMER' && activeTab === 'farmer' && (() => {
-            const matchesCount = allRequirements.filter(req => myCrops.some(c => c.crop_name.toLowerCase().trim() === req.crop_name.toLowerCase().trim())).length;
+            const matchesCount = allRequirements.filter(req => myCrops.some(c => (c.crop_name || '').toLowerCase().trim() === (req.crop_name || '').toLowerCase().trim())).length;
             const offersCount = cropOffers.length;
             
             let nextStepText = "";
@@ -1107,9 +1107,15 @@ export default function App() {
               nextStepAction = () => setActiveTab('find-buyers');
             } else if (offersCount > 0 && cropOffers.some(o => o.status === 'pending' || o.status === 'countered')) {
               const pendingOffer = cropOffers.find(o => o.status === 'pending' || o.status === 'countered');
-              nextStepText = `You have a new offer for your ${pendingOffer.crop.crop_name}. / உங்கள் ${pendingOffer.crop.crop_name} பயிருக்கு புதிய சலுகை வந்துள்ளது.`;
-              nextStepBtnText = "💰 View Offer / சலுகையை காண்க";
-              nextStepAction = () => setActiveTab('offers');
+              if (pendingOffer) {
+                nextStepText = `You have a new offer for your ${pendingOffer.crop.crop_name}. / உங்கள் ${pendingOffer.crop.crop_name} பயிருக்கு புதிய சலுகை வந்துள்ளது.`;
+                nextStepBtnText = "💰 View Offer / சலுகையை காண்க";
+                nextStepAction = () => setActiveTab('offers');
+              } else {
+                nextStepText = "Check matched buyers for your active crop listings. / உங்கள் பயிர்களுக்கான வாங்குபவர்கள் பொருத்தங்களை பார்க்கவும்.";
+                nextStepBtnText = "🔍 Find Buyers / வாங்குபவர்களை தேடு";
+                nextStepAction = () => setActiveTab('find-buyers');
+              }
             } else {
               nextStepText = "Check matched buyers for your active crop listings. / உங்கள் பயிர்களுக்கான வாங்குபவர்கள் பொருத்தங்களை பார்க்கவும்.";
               nextStepBtnText = "🔎 Find Buyers / வாங்குபவர்களை தேடு";
@@ -1208,7 +1214,7 @@ export default function App() {
                     <div className="bg-white border rounded-2xl p-6 shadow-sm space-y-4">
                       <h3 className="text-lg font-bold text-slate-800 border-b pb-2">🌾 Post Crop / பயிர் இடுகையிடு</h3>
                       <form onSubmit={async (e) => { 
-                        await handleAddCrop(e); 
+                        await handleUploadCrop(e); 
                         setIsCreatingCrop(false); 
                       }} className="space-y-4 text-slate-700 text-xs">
                         <div>
@@ -1431,13 +1437,13 @@ export default function App() {
                     const matches = allRequirements
                       .map(req => {
                         let crop_score = 0.0;
-                        if (req.crop_name.toLowerCase().trim() === selectedCrop.crop_name.toLowerCase().trim()) {
+                        if ((req.crop_name || '').toLowerCase().trim() === (selectedCrop.crop_name || '').toLowerCase().trim()) {
                           crop_score = 40.0;
                         }
                         
                         let location_score = 25.0;
                         let distance_km = 0.0;
-                        if (req.preferred_location.toLowerCase().trim() !== selectedCrop.location.toLowerCase().trim()) {
+                        if ((req.preferred_location || '').toLowerCase().trim() !== (selectedCrop.location || '').toLowerCase().trim()) {
                           location_score = 15.0;
                           distance_km = 80.0;
                         }
@@ -1577,7 +1583,7 @@ export default function App() {
                       {sortedOffers.map((offer, index) => {
                         const expectedPrice = offer.crop.expected_price;
                         const offeredPrice = offer.offered_price_per_unit;
-                        const cropKey = offer.crop.crop_name.toLowerCase().trim();
+                        const cropKey = (offer.crop.crop_name || '').toLowerCase().trim();
                         const marketPrice = marketPrices[cropKey] || 22.0;
                         
                         const isBelowMarket = offeredPrice < marketPrice;
@@ -1676,7 +1682,7 @@ export default function App() {
 
           {/* 5. BUYER DASHBOARD TAB */}
           {currentUser?.role === 'BUYER' && activeTab === 'buyer' && (() => {
-            const matchedCropsCount = marketplaceCrops.filter(crop => myRequirements.some(req => req.crop_name.toLowerCase().trim() === crop.crop_name.toLowerCase().trim())).length;
+            const matchedCropsCount = marketplaceCrops.filter(crop => myRequirements.some(req => (req.crop_name || '').toLowerCase().trim() === (crop.crop_name || '').toLowerCase().trim())).length;
             const myBidsCount = myOffers.length;
             
             let nextStepText = "";
